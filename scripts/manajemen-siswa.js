@@ -215,4 +215,30 @@ async function hapusDataSiswa(id) {
     if (error) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
     } else {
-        tampilkanNotifikasi('Siswa berhasil dihapus
+        tampilkanNotifikasi('Siswa berhasil dihapus.', 'warning');
+        muatDataSiswa();
+    }
+}
+
+function resetFormSiswa() {
+    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
+    document.getElementById('formTambahMurid').reset();
+    document.getElementById('ID_Siswa').value = '';
+    const tombolSimpan = document.getElementById('tombolSimpanSiswa');
+    tombolSimpan.textContent = 'Simpan Siswa Baru';
+    tombolSimpan.disabled = false;
+    document.getElementById('tombolBatalSiswa').classList.add('hidden');
+}
+
+function tampilkanNotifikasi(message, type) {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
+    notification.className = `fixed top-20 right-4 px-6 py-3 rounded-md shadow-lg text-white transition-all duration-300 z-50 ${bgColor}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => { notification.remove(); }, 300);
+    }, 3000);
+}
