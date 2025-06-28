@@ -1,5 +1,5 @@
 // GANTI DENGAN URL API BARU YANG SAMA
-const API_URL = "https://script.google.com/macros/s/AKfycbxZc7j6-gpoJuLy2hA55qqV7DML5Er7hcklfkY42qA1GNDZNf2g-s5EGuTAFZOh1vP1/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec";
 
 const rowsPerPage = 8;
 let siswaKelasCache = [];
