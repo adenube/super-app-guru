@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', function() {
     muatDaftarKelas();
     document.getElementById('tampilkanSiswaBtn').addEventListener('click', handleTampilkanSiswa);
     document.getElementById('simpanPresensiBtn').addEventListener('click', handleSimpanPresensi);
-    document.getElementById('paginationControlsPresensi').addEventListener('click', handlePaginasi);
+    const paginationControls = document.getElementById('paginationControlsPresensi');
+    if(paginationControls) {
+        paginationControls.addEventListener('click', handlePaginasi);
+    }
 });
 
 function muatDaftarKelas() {
@@ -48,7 +51,7 @@ function handleTampilkanSiswa() {
     const btn = document.getElementById('tampilkanSiswaBtn');
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
-
+    
     fetch(`${API_URL}?action=getInitialPresensiData&tanggal=${tanggal}&kelas=${kelas}`)
         .then(response => response.json())
         .then(result => {
@@ -73,6 +76,7 @@ function tampilkanHalaman(page) {
     const container = document.getElementById('daftarSiswaContainer');
     const simpanBtn = document.getElementById('simpanPresensiBtn');
     container.innerHTML = '';
+    
     if (!siswaKelasCache || siswaKelasCache.length === 0) {
         container.innerHTML = '<p class="text-center text-green-600 font-semibold">Tidak ada siswa yang perlu diabsen untuk pilihan ini.</p>';
         simpanBtn.classList.add('hidden');
@@ -81,6 +85,7 @@ function tampilkanHalaman(page) {
         const startIndex = (page - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         const dataHalamanIni = siswaKelasCache.slice(startIndex, endIndex);
+
         dataHalamanIni.forEach(siswa => {
             const [idSiswa, , namaSiswa, kelasSiswa] = siswa;
             const divSiswa = document.createElement('div');
@@ -109,21 +114,45 @@ function gambarTombolPaginasi() {
     const totalRows = siswaKelasCache.length;
     const totalPages = Math.ceil(totalRows / rowsPerPage);
     if (totalPages <= 1) return;
-    // Logika pembuatan tombol paginasi (Prev, 1, 2, 3, Next)
+
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&laquo;';
+    prevButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    prevButton.dataset.page = currentPage - 1;
+    if (currentPage === 1) { prevButton.disabled = true; prevButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(prevButton);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.innerText = i;
+        pageButton.dataset.page = i;
+        pageButton.className = 'px-3 py-1 rounded-md border ' + (i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100');
+        paginationControls.appendChild(pageButton);
+    }
+
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = '&raquo;';
+    nextButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    nextButton.dataset.page = currentPage + 1;
+    if (currentPage === totalPages) { nextButton.disabled = true; nextButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(nextButton);
 }
 
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        if (page > 0) tampilkanHalaman(page);
+        if (page > 0) { // Simple check, could be more robust
+            tampilkanHalaman(page);
+        }
     }
 }
 
 function handleSimpanPresensi() {
-    const btn = this;
+    const btn = document.getElementById('simpanPresensiBtn');
     btn.disabled = true;
     btn.innerHTML = "Menyimpan...";
     const dataPresensi = { tanggal: document.getElementById('tanggalPresensi').value, status: {}, catatan: {} };
+    
     document.querySelectorAll('.siswa-row').forEach(baris => {
         const idSiswa = baris.dataset.id;
         const statusTerpilih = baris.querySelector(`input[name="status-${idSiswa}"]:checked`);
@@ -139,13 +168,13 @@ function handleSimpanPresensi() {
         .then(result => {
             if(result.status === 'success') {
                 tampilkanNotifikasi(result.data, 'success');
-                btn.disabled = false;
-                btn.innerHTML = "Simpan Presensi";
                 document.getElementById('daftarSiswaContainer').innerHTML = '<p class="text-center text-green-600 font-semibold">Presensi sudah disimpan.</p>';
                 btn.classList.add('hidden');
                 const paginationControls = document.getElementById('paginationControlsPresensi');
                 if(paginationControls) paginationControls.innerHTML = '';
             } else { throw new Error(result.message); }
+            btn.disabled = false;
+            btn.innerHTML = "Simpan Presensi";
         })
         .catch(err => {
             tampilkanNotifikasi('Error: ' + err.message, 'error');
@@ -155,5 +184,15 @@ function handleSimpanPresensi() {
 }
 
 function tampilkanNotifikasi(message, type) {
-    // ... kode sama persis ...
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
+    notification.className = `fixed top-20 right-4 px-6 py-3 rounded-md shadow-lg text-white transition-all duration-300 z-50 ${bgColor}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => { notification.remove(); }, 300);
+    }, 3000);
 }
+</script>
