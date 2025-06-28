@@ -39,8 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ... SISA SEMUA FUNGSI LAINNYA (muatDaftarKelas, handleTampilkanSiswa, dll.) SAMA PERSIS SEPERTI JAWABAN SEBELUMNYA ...
-// Tidak ada perubahan di fungsi-fungsi helper ini.
 async function muatDaftarKelas() {
     try {
         const daftarKelas = await callApi('getDaftarKelas');
@@ -80,9 +78,8 @@ async function handleTampilkanSiswa() {
         siswaKelasCache = data.siswaDiKelas.filter(siswa => !data.siswaSudahAbsen.includes(siswa[0]));
         currentPage = 1;
         tampilkanHalaman(currentPage);
-    } catch (error) {
-        // Notifikasi sudah ditangani oleh callApi
-    } finally {
+    } catch (error) { /* error ditangani callApi */ }
+    finally {
         btn.disabled = false;
         btn.innerHTML = "Tampilkan Siswa";
     }
@@ -132,13 +129,35 @@ function gambarTombolPaginasi() {
     const totalPages = Math.ceil(totalRows / rowsPerPage);
     if (totalPages <= 1) return;
     
-    // ... Logika lengkap untuk membuat tombol ...
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&laquo;';
+    prevButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    prevButton.dataset.page = currentPage - 1;
+    if (currentPage === 1) { prevButton.disabled = true; prevButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(prevButton);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.innerText = i;
+        pageButton.dataset.page = i;
+        pageButton.className = 'px-3 py-1 rounded-md border ' + (i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100');
+        paginationControls.appendChild(pageButton);
+    }
+
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = '&raquo;';
+    nextButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    nextButton.dataset.page = currentPage + 1;
+    if (currentPage === totalPages) { nextButton.disabled = true; nextButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(nextButton);
 }
 
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        if (page > 0) tampilkanHalaman(page);
+        if (page > 0) {
+            tampilkanHalaman(page);
+        }
     }
 }
 
@@ -164,9 +183,8 @@ async function handleSimpanPresensi() {
         btn.classList.add('hidden');
         const paginationControls = document.getElementById('paginationControlsPresensi');
         if(paginationControls) paginationControls.innerHTML = '';
-    } catch (error) {
-        // Notifikasi sudah ditangani oleh callApi
-    } finally {
+    } catch (error) { /* error ditangani callApi */ }
+    finally {
         btn.disabled = false;
         btn.innerHTML = "Simpan Presensi";
     }

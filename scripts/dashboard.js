@@ -1,5 +1,5 @@
-// GANTI DENGAN URL API BARU DARI DEPLOYMENT TERAKHIR
-const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec
+";
 
 let rekapDetailCache = {};
 
@@ -26,7 +26,6 @@ async function callApi(action, payload = {}) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // LANGSUNG PASANG EVENT LISTENER, TANPA renderLayout()
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
     
@@ -38,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('rekapPresensiBody').addEventListener('click', handleCellClick);
     
-    // Set tanggal default
     const endDateInput = document.getElementById('endDate');
     const startDateInput = document.getElementById('startDate');
     const today = new Date();
@@ -57,7 +55,7 @@ async function muatRekapSiswa() {
         document.getElementById('totalMurid').textContent = data.totalMurid;
         document.getElementById('totalLaki').textContent = data.totalLaki;
         document.getElementById('totalPerempuan').textContent = data.totalPerempuan;
-    } catch (error) { /* error ditangani callApi */ } 
+    } catch (error) { /* error sudah ditangani oleh callApi */ }
     finally {
         btn.disabled = false;
         btn.innerHTML = "Muat Statistik";
@@ -72,9 +70,11 @@ async function muatLaporanPresensi() {
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value
     };
+
     if (!payload.startDate || !payload.endDate) {
         tampilkanNotifikasi("Silakan isi kedua tanggal filter.", "error"); return;
     }
+
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     tabelBody.innerHTML = '';
@@ -85,6 +85,7 @@ async function muatLaporanPresensi() {
         const result = await callApi('getRekapPresensi', payload);
         const data = result.summaryData;
         rekapDetailCache = result.detailedData;
+
         if (data && data.length > 0) {
             emptyState.classList.add('hidden');
             data.forEach(item => {
@@ -115,7 +116,7 @@ async function handleCellClick(e) {
     const cell = e.target;
     const jumlah = parseInt(cell.textContent, 10);
     if (isNaN(jumlah) || jumlah === 0) return;
-    
+
     const filter = {
         kelas: cell.dataset.kelas,
         status: cell.dataset.status,
