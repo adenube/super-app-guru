@@ -21,9 +21,10 @@ function renderLayout() {
     const container = document.getElementById('content-container');
     if (!container) return;
     
+    // Layout ini tidak kita ubah karena lo minta polesan UX nanti saja
     container.innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle">Form Tambah Murid Baru</h2>
                 <form id="formTambahMurid" class="space-y-4">
                     <input type="hidden" id="ID_Siswa">
@@ -34,7 +35,7 @@ function renderLayout() {
                     <div class="pt-2 flex justify-end gap-4"><button type="button" id="tombolBatalSiswa" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button><button type="submit" id="tombolSimpanSiswa" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan Siswa Baru</button></div>
                 </form>
             </div>
-            <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Daftar Murid Terdaftar</h2>
                 <div class="overflow-x-auto"><table class="min-w-full bg-white"><thead class="bg-gray-100"><tr><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">No. Induk</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Nama</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Jenis Kelamin</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Aksi</th></tr></thead><tbody id="tabelSiswaBody"></tbody></table></div>
                 <div id="emptyState" class="text-center py-8 text-gray-500"><p>Memuat data...</p></div>
@@ -169,13 +170,13 @@ function handleSimpanSiswa(e) {
     .then(response => response.json())
     .then(result => {
         if (result.status === 'success') {
-            tampilkanNotifikasi(result.data.pesan || result.data, 'success'); // DIGANTI
+            tampilkanNotifikasi(result.data.pesan || result.data, 'success');
             muatDataSiswa();
             resetFormSiswa();
         } else { throw new Error(result.message); }
     })
     .catch(error => {
-        tampilkanNotifikasi('Error: ' + error.message, 'error'); // DIGANTI
+        tampilkanNotifikasi('Error: ' + error.message, 'error');
         resetFormSiswa();
     });
 }
@@ -202,11 +203,11 @@ function handleAksiTabel(e) {
                 .then(r => r.json())
                 .then(res => {
                     if (res.status === 'success') {
-                        tampilkanNotifikasi(res.data, 'warning'); // DIGANTI
+                        tampilkanNotifikasi(res.data, 'warning');
                         muatDataSiswa();
                     } else { throw new Error(res.message); }
                 })
-                .catch(err => tampilkanNotifikasi('Error: ' + err.message, 'error')); // DIGANTI
+                .catch(err => tampilkanNotifikasi('Error: ' + err.message, 'error'));
         }
     }
 }
@@ -221,7 +222,6 @@ function resetFormSiswa() {
     document.getElementById('tombolBatalSiswa').classList.add('hidden');
 }
 
-// FUNGSI NOTIFIKASI ELEGAN
 function tampilkanNotifikasi(message, type) {
     const notification = document.createElement('div');
     const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
@@ -234,4 +234,3 @@ function tampilkanNotifikasi(message, type) {
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
 }
-</script>
