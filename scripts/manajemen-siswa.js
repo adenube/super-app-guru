@@ -154,11 +154,22 @@ async function handleSimpanSiswa(e) {
     }
 }
 
-function handleAksiTabel(e) {
+// GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN INI
+async function handleAksiTabel(e) {
+    console.log("--- MENDETEKSI KLIK DI DALAM TABEL ---");
+    console.log("Elemen yang diklik:", e.target);
+
     const id = e.target.dataset.id;
+    console.log("Mencoba mengambil ID dari elemen:", id);
+
     if (e.target.classList.contains('edit-btn')) {
+        console.log("INFO: Tombol 'Edit' terdeteksi!");
+        
         const siswa = semuaSiswaCache.find(s => s.id === id);
+        console.log("Mencari siswa di cache. Hasil:", siswa);
+
         if (siswa) {
+            console.log("SUKSES: Siswa ditemukan! Mengisi form...");
             document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
             document.getElementById('ID_Siswa').value = siswa.id;
             document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
@@ -168,11 +179,22 @@ function handleAksiTabel(e) {
             document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
             document.getElementById('tombolBatalSiswa').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            console.error("GAGAL: Siswa dengan ID '" + id + "' tidak ditemukan di cache!");
         }
+
     } else if (e.target.classList.contains('delete-btn')) {
+        console.log("INFO: Tombol 'Hapus' terdeteksi!");
         if (confirm('Yakin ingin menghapus siswa ini?')) {
-            hapusDataSiswa(id);
+            try {
+                // hapusDataSiswa adalah async, jadi kita beri await di sini
+                await hapusDataSiswa(id); 
+            } catch(error){
+                console.error("Gagal menjalankan hapusDataSiswa:", error)
+            }
         }
+    } else {
+        console.log("INFO: Klik terdeteksi, tapi bukan tombol Edit atau Hapus.");
     }
 }
 
