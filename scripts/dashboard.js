@@ -3,7 +3,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1w
 
 let rekapDetailCache = {};
 
-// Fungsi untuk membuat panggilan API dengan fetch POST
 async function callApi(action, payload = {}) {
     document.body.style.cursor = 'wait';
     try {
@@ -27,16 +26,7 @@ async function callApi(action, payload = {}) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const endDateInput = document.getElementById('endDate');
-    const startDateInput = document.getElementById('startDate');
-    if (endDateInput && startDateInput) {
-        const today = new Date();
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(today.getDate() - 6);
-        endDateInput.valueAsDate = today;
-        startDateInput.valueAsDate = oneWeekAgo;
-    }
-
+    // LANGSUNG PASANG EVENT LISTENER, TANPA renderLayout()
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
     
@@ -47,6 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.id === 'detailModal') modal.classList.add('hidden');
     });
     document.getElementById('rekapPresensiBody').addEventListener('click', handleCellClick);
+    
+    // Set tanggal default
+    const endDateInput = document.getElementById('endDate');
+    const startDateInput = document.getElementById('startDate');
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 6);
+    endDateInput.valueAsDate = today;
+    startDateInput.valueAsDate = oneWeekAgo;
 });
 
 async function muatRekapSiswa() {
@@ -58,9 +57,8 @@ async function muatRekapSiswa() {
         document.getElementById('totalMurid').textContent = data.totalMurid;
         document.getElementById('totalLaki').textContent = data.totalLaki;
         document.getElementById('totalPerempuan').textContent = data.totalPerempuan;
-    } catch (error) {
-        // Notifikasi sudah ditangani oleh callApi
-    } finally {
+    } catch (error) { /* error ditangani callApi */ } 
+    finally {
         btn.disabled = false;
         btn.innerHTML = "Muat Statistik";
     }
@@ -74,12 +72,9 @@ async function muatLaporanPresensi() {
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value
     };
-
     if (!payload.startDate || !payload.endDate) {
-        tampilkanNotifikasi("Silakan isi kedua tanggal filter.", "error");
-        return;
+        tampilkanNotifikasi("Silakan isi kedua tanggal filter.", "error"); return;
     }
-
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     tabelBody.innerHTML = '';
@@ -90,19 +85,18 @@ async function muatLaporanPresensi() {
         const result = await callApi('getRekapPresensi', payload);
         const data = result.summaryData;
         rekapDetailCache = result.detailedData;
-
         if (data && data.length > 0) {
             emptyState.classList.add('hidden');
             data.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'border-t hover:bg-blue-50';
                 row.innerHTML = `
-                    <td class="py-3 px-4 font-medium">${item.kelas}</td>
-                    <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="H">${item.H}</span></td>
-                    <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="S">${item.S}</span></td>
-                    <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="I">${item.I}</span></td>
-                    <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="A">${item.A}</span></td>
-                    <td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>`;
+                  <td class="py-3 px-4 font-medium">${item.kelas}</td>
+                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="H">${item.H}</span></td>
+                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="S">${item.S}</span></td>
+                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="I">${item.I}</span></td>
+                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="A">${item.A}</span></td>
+                  <td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>`;
                 tabelBody.appendChild(row);
             });
         } else {
@@ -116,36 +110,43 @@ async function muatLaporanPresensi() {
     }
 }
 
-function handleCellClick(e) {
+async function handleCellClick(e) {
     if (!e.target || !e.target.classList.contains('clickable-cell')) return;
-
     const cell = e.target;
     const jumlah = parseInt(cell.textContent, 10);
     if (isNaN(jumlah) || jumlah === 0) return;
-
-    const kelas = cell.dataset.kelas;
-    const status = cell.dataset.status;
+    
+    const filter = {
+        kelas: cell.dataset.kelas,
+        status: cell.dataset.status,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+    };
     
     const modal = document.getElementById('detailModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalList = document.getElementById('modalList');
-    const statusLengkap = {'H':'Hadir','S':'Sakit','I':'Izin','A':'Alpha'}[status] || status;
+    const statusLengkap = {'H':'Hadir','S':'Sakit','I':'Izin','A':'Alpha'}[filter.status] || filter.status;
     
-    modalTitle.textContent = `Siswa Kelas ${kelas} (Status: ${statusLengkap})`;
-    modalList.innerHTML = '';
-    
-    const namaSiswa = rekapDetailCache[kelas] ? (rekapDetailCache[kelas][status] || []) : [];
-    
-    if (namaSiswa.length > 0) {
-        namaSiswa.forEach(nama => {
-            const li = document.createElement('li');
-            li.textContent = nama;
-            modalList.appendChild(li);
-        });
-    } else {
-        modalList.innerHTML = '<li>Tidak ada data siswa ditemukan.</li>';
-    }
+    modalTitle.textContent = `Siswa Kelas ${filter.kelas} (Status: ${statusLengkap})`;
+    modalList.innerHTML = '<li>Mencari data...</li>';
     modal.classList.remove('hidden');
+
+    try {
+        const namaSiswa = await callApi('getDetailPresensiAkurat', filter);
+        modalList.innerHTML = '';
+        if (namaSiswa && namaSiswa.length > 0) {
+            namaSiswa.forEach(nama => {
+                const li = document.createElement('li');
+                li.textContent = nama;
+                modalList.appendChild(li);
+            });
+        } else {
+            modalList.innerHTML = '<li>Tidak ada data siswa ditemukan.</li>';
+        }
+    } catch (error) {
+        modalList.innerHTML = `<li>Gagal mengambil data.</li>`;
+    }
 }
 
 function tampilkanNotifikasi(message, type) {

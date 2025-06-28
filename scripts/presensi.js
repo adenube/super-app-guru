@@ -1,5 +1,6 @@
 // GANTI DENGAN URL API BARU YANG SAMA
-const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec
+";
 
 const rowsPerPage = 8;
 let siswaKelasCache = [];
@@ -38,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ... SISA SEMUA FUNGSI LAINNYA (muatDaftarKelas, handleTampilkanSiswa, dll.) SAMA PERSIS SEPERTI JAWABAN SEBELUMNYA ...
+// Tidak ada perubahan di fungsi-fungsi helper ini.
 async function muatDaftarKelas() {
     try {
         const daftarKelas = await callApi('getDaftarKelas');
@@ -181,4 +184,3 @@ function tampilkanNotifikasi(message, type) {
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
 }
-</script>
