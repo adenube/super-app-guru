@@ -34,6 +34,10 @@ async function muatDataSiswa() {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
+		
+		// ===== PASANG CCTV DI SINI =====
+        console.log("Data mentah diterima dari Supabase:", data);
+        // ===============================
         
         semuaSiswaCache = data;
         currentPage = 1;
