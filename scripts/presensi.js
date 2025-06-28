@@ -1,7 +1,7 @@
 // ==========================================================
 // PASTE URL WEB APP DARI APPS SCRIPT YANG KAMU SIMPAN DI SINI
 // ==========================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbxg1HyJhXd9Fckb3HD_u4C2l6XrjGbDSH8POg7dRNsA8Li0AgOCERqzQ5PWyUVRnC6h/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbz2T93IbEnS_NIoADu19rgOnMTf96Yc7hKUCco0XAP8GV6I3d-Qz1g4Zd7xTQrCTIQ/exec";
 // ==========================================================
 
 const rowsPerPage = 8;
