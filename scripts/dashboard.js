@@ -1,31 +1,18 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbywvwaI_1D1JqGpMl4VDE1wur7VpLGWLusufuzKuAqwu0UMF5sm_bE0SrhO48X4_xeW/exec
-";
+// ISI DENGAN KUNCI RAHASIA SUPABASE-MU
+const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// --- Variabel Global ---
 let rekapDetailCache = {};
 
-async function callApi(action, payload = {}) {
-    document.body.style.cursor = 'wait';
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action, payload })
-        });
-        const result = await response.json();
-        if (result.status === 'success') {
-            return result.data;
-        } else {
-            throw new Error(result.message);
-        }
-    } catch (error) {
-        tampilkanNotifikasi('Error: ' + error.message, 'error');
-        throw error;
-    } finally {
-        document.body.style.cursor = 'default';
-    }
-}
-
+// --- Event Listener Utama ---
 document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+    setDefaultDates();
+});
+
+function setupEventListeners() {
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
     
@@ -36,7 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.id === 'detailModal') modal.classList.add('hidden');
     });
     document.getElementById('rekapPresensiBody').addEventListener('click', handleCellClick);
-    
+}
+
+function setDefaultDates() {
     const endDateInput = document.getElementById('endDate');
     const startDateInput = document.getElementById('startDate');
     const today = new Date();
@@ -44,19 +33,29 @@ document.addEventListener('DOMContentLoaded', function() {
     oneWeekAgo.setDate(today.getDate() - 6);
     endDateInput.valueAsDate = today;
     startDateInput.valueAsDate = oneWeekAgo;
-});
+}
+
+// --- Fungsi-fungsi Logika ---
 
 async function muatRekapSiswa() {
     const btn = document.getElementById('muatStatistikBtn');
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     try {
-        const data = await callApi('getRekapitulasiData');
-        document.getElementById('totalMurid').textContent = data.totalMurid;
-        document.getElementById('totalLaki').textContent = data.totalLaki;
-        document.getElementById('totalPerempuan').textContent = data.totalPerempuan;
-    } catch (error) { /* error sudah ditangani oleh callApi */ }
-    finally {
+        const { data, error } = await supa.from('Siswa').select('Jenis_Kelamin');
+        if (error) throw error;
+        
+        const totalMurid = data.length;
+        const totalLaki = data.filter(s => s.Jenis_Kelamin === 'Laki-laki').length;
+        const totalPerempuan = totalMurid - totalLaki;
+
+        document.getElementById('totalMurid').textContent = totalMurid;
+        document.getElementById('totalLaki').textContent = totalLaki;
+        document.getElementById('totalPerempuan').textContent = totalPerempuan;
+
+    } catch (error) {
+        tampilkanNotifikasi("Gagal memuat statistik: " + error.message, "error");
+    } finally {
         btn.disabled = false;
         btn.innerHTML = "Muat Statistik";
     }
@@ -66,12 +65,10 @@ async function muatLaporanPresensi() {
     const btn = document.getElementById('terapkanFilterBtn');
     const tabelBody = document.getElementById('rekapPresensiBody');
     const emptyState = document.getElementById('emptyStateLaporan');
-    const payload = {
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value
-    };
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
 
-    if (!payload.startDate || !payload.endDate) {
+    if (!startDate || !endDate) {
         tampilkanNotifikasi("Silakan isi kedua tanggal filter.", "error"); return;
     }
 
@@ -82,13 +79,19 @@ async function muatLaporanPresensi() {
     emptyState.classList.remove('hidden');
 
     try {
-        const result = await callApi('getRekapPresensi', payload);
-        const data = result.summaryData;
-        rekapDetailCache = result.detailedData;
+        const { data, error } = await supa.rpc('get_rekap_presensi_detail', {
+            start_date: startDate,
+            end_date: endDate
+        });
 
-        if (data && data.length > 0) {
+        if (error) throw error;
+
+        rekapDetailCache = data.detailedData;
+        const summaryData = data.summaryData;
+
+        if (summaryData && summaryData.length > 0) {
             emptyState.classList.add('hidden');
-            data.forEach(item => {
+            summaryData.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'border-t hover:bg-blue-50';
                 row.innerHTML = `
@@ -105,49 +108,42 @@ async function muatLaporanPresensi() {
         }
     } catch (error) {
         emptyState.innerHTML = `<p class="text-red-500">Gagal memuat laporan.</p>`;
+        tampilkanNotifikasi(error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = "Tampilkan Laporan";
     }
 }
 
-async function handleCellClick(e) {
+function handleCellClick(e) {
     if (!e.target || !e.target.classList.contains('clickable-cell')) return;
     const cell = e.target;
     const jumlah = parseInt(cell.textContent, 10);
     if (isNaN(jumlah) || jumlah === 0) return;
-
-    const filter = {
-        kelas: cell.dataset.kelas,
-        status: cell.dataset.status,
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value
-    };
+    
+    const kelas = cell.dataset.kelas;
+    const status = cell.dataset.status;
     
     const modal = document.getElementById('detailModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalList = document.getElementById('modalList');
-    const statusLengkap = {'H':'Hadir','S':'Sakit','I':'Izin','A':'Alpha'}[filter.status] || filter.status;
+    const statusLengkap = {'H':'Hadir','S':'Sakit','I':'Izin','A':'Alpha'}[status] || status;
     
-    modalTitle.textContent = `Siswa Kelas ${filter.kelas} (Status: ${statusLengkap})`;
-    modalList.innerHTML = '<li>Mencari data...</li>';
-    modal.classList.remove('hidden');
-
-    try {
-        const namaSiswa = await callApi('getDetailPresensiAkurat', filter);
-        modalList.innerHTML = '';
-        if (namaSiswa && namaSiswa.length > 0) {
-            namaSiswa.forEach(nama => {
-                const li = document.createElement('li');
-                li.textContent = nama;
-                modalList.appendChild(li);
-            });
-        } else {
-            modalList.innerHTML = '<li>Tidak ada data siswa ditemukan.</li>';
-        }
-    } catch (error) {
-        modalList.innerHTML = `<li>Gagal mengambil data.</li>`;
+    modalTitle.textContent = `Siswa Kelas ${kelas} (Status: ${statusLengkap})`;
+    modalList.innerHTML = '';
+    
+    const namaSiswa = rekapDetailCache[kelas] ? (rekapDetailCache[kelas][status] || []) : [];
+    
+    if (namaSiswa.length > 0) {
+        namaSiswa.forEach(nama => {
+            const li = document.createElement('li');
+            li.textContent = nama;
+            modalList.appendChild(li);
+        });
+    } else {
+        modalList.innerHTML = '<li>Tidak ada data siswa ditemukan.</li>';
     }
+    modal.classList.remove('hidden');
 }
 
 function tampilkanNotifikasi(message, type) {
