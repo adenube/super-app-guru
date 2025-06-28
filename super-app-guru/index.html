@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Murid - SuperApp Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .radio-item label { display: flex; align-items: center; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 2px solid #e5e7eb; }
+        .radio-item input[type="radio"]:checked + label { border-color: #3b82f6; background-color: #eff6ff; }
+        .radio-item input[type="radio"] { position: absolute; opacity: 0; }
+        .radio-item label::before { content: ''; width: 18px; height: 18px; border-radius: 50%; margin-right: 8px; border: 2px solid #d1d5db; box-sizing: border-box; transition: all 0.2s; }
+        .radio-item input[type="radio"]:checked + label::before { border: 5px solid #3b82f6; background-color: white; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <div><a href="index.html" class="flex items-center py-5 px-2 text-gray-700"><span class="font-bold">SuperApp Guru</span></a></div>
+            <div class="hidden md:flex items-center space-x-1">
+                <a href="index.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Manajemen Siswa</a>
+                <a href="#" class="py-5 px-3 text-gray-400 cursor-not-allowed">Dashboard</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <div id="content-container">
+            </div>
+    </div>
+    
+    <script src="scripts/manajemen-siswa.js"></script>
+</body>
+</html>
