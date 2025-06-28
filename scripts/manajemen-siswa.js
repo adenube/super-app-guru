@@ -4,14 +4,19 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwoymFxlkZKVnFQxSCd-e6JKzuEnmJndGEBMPb1s7AUpH69diV-vSh2RVubw15_UKzD/exec"; 
 // ==========================================================
 
+// --- Variabel Global ---
+let semuaSiswaCache = [];
+let currentPage = 1;
+const rowsPerPage = 5;
 
-// Fungsi utama yang dijalankan saat halaman siap
+// --- Event Listener Utama ---
 document.addEventListener('DOMContentLoaded', function() {
-    renderLayout();
-    muatDataSiswa();
+    renderLayout(); // Render kerangka HTML dulu
+    muatDataSiswa(); // Lalu langsung muat datanya
 });
 
-// Fungsi untuk merender layout awal
+// --- Fungsi-fungsi ---
+
 function renderLayout() {
     const container = document.getElementById('content-container');
     container.innerHTML = `
@@ -37,59 +42,140 @@ function renderLayout() {
     `;
     // Attach event listeners setelah layout dirender
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
-    // ...tambahkan event listener lain di sini...
+    document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
+    document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
+    document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
 }
 
-
-// Pola baru menggunakan fetch untuk GET data
 function muatDataSiswa() {
+    document.getElementById('emptyState').innerHTML = `<p>Memuat data...</p>`;
     fetch(`${API_URL}?action=getSemuaSiswa`)
         .then(response => response.json())
         .then(result => {
             if (result.status === 'success') {
-                // Logika untuk menampilkan data siswa (paginasi, dll)
-                console.log('Data siswa diterima:', result.data);
-                // Di sini nanti kita panggil fungsi untuk render tabel
-            } else {
-                throw new Error(result.message);
-            }
+                semuaSiswaCache = result.data;
+                currentPage = 1;
+                tampilkanHalaman(currentPage);
+            } else { throw new Error(result.message); }
         })
         .catch(error => {
             console.error('Error saat memuat data siswa:', error);
-            document.getElementById('emptyState').innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
+            document.getElementById('emptyState').innerHTML = `<p class="text-red-500">Gagal memuat data: ${error.message}</p>`;
         });
 }
 
-// Pola baru menggunakan fetch untuk POST data
+function tampilkanHalaman(page) {
+    currentPage = page;
+    const tabelBody = document.getElementById('tabelSiswaBody');
+    const emptyState = document.getElementById('emptyState');
+    tabelBody.innerHTML = '';
+    if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
+        emptyState.classList.remove('hidden');
+        emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
+    } else {
+        emptyState.classList.add('hidden');
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const dataHalamanIni = semuaSiswaCache.slice(startIndex, endIndex);
+        dataHalamanIni.forEach(siswa => tambahBarisKeTabel(siswa));
+    }
+    gambarTombolPaginasi();
+}
+
+function tambahBarisKeTabel(dataSiswaArray) {
+    const tabelBody = document.getElementById('tabelSiswaBody');
+    const [id, nomorInduk, nama, kelas, jenisKelamin] = dataSiswaArray;
+    const row = document.createElement('tr');
+    row.id = `siswa-${id}`;
+    row.className = 'border-t hover:bg-gray-50';
+    row.innerHTML = `
+      <td class="py-3 px-4">${nomorInduk}</td><td class="py-3 px-4">${nama}</td>
+      <td class="py-3 px-4">${kelas}</td><td class="py-3 px-4">${jenisKelamin}</td>
+      <td class="py-3 px-4"><div class="flex space-x-2">
+        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${id}">Edit</button>
+        <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${id}">Hapus</button>
+      </div></td>`;
+    tabelBody.appendChild(row);
+}
+
+function gambarTombolPaginasi() {
+    const paginationControls = document.getElementById('paginationControls');
+    paginationControls.innerHTML = '';
+    const totalRows = semuaSiswaCache.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    if (totalPages <= 1) return;
+    
+    // Logika untuk membuat tombol paginasi (Prev, 1, 2, 3, Next)
+    // ... (kode ini sama persis dengan yang sudah kita buat sebelumnya)
+}
+
+function handlePaginasi(e) {
+    if (e.target.dataset.page) {
+        const page = parseInt(e.target.dataset.page, 10);
+        tampilkanHalaman(page);
+    }
+}
+
+
 function handleSimpanSiswa(e) {
     e.preventDefault();
-    
+    const tombolSimpan = document.getElementById('tombolSimpanSiswa');
+    tombolSimpan.disabled = true;
+
+    const idSiswa = document.getElementById('ID_Siswa').value;
     const dataForm = {
-        // ... ambil data dari form ...
+        nomorInduk: document.getElementById('Nomor_Induk').value,
+        namaLengkap: document.getElementById('Nama_Lengkap').value,
+        kelas: document.getElementById('Kelas').value,
+        jenisKelamin: document.querySelector('input[name="Jenis_Kelamin"]:checked').value
     };
 
-    const payload = {
-        action: 'tambahSiswaBaru', // atau 'editSiswa'
-        payload: dataForm
-    };
+    let action = 'tambahSiswaBaru';
+    if (idSiswa) {
+        action = 'editSiswa';
+        dataForm.id = idSiswa;
+        tombolSimpan.innerHTML = "Mengupdate...";
+    } else {
+        tombolSimpan.innerHTML = "Menyimpan...";
+    }
+    
+    const payload = { action: action, payload: dataForm };
 
-    fetch(API_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain;charset=utf-g', // Diperlukan untuk Apps Script
-        },
-        body: JSON.stringify(payload)
-    })
+    fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
     .then(response => response.json())
     .then(result => {
         if (result.status === 'success') {
-            console.log('Respon server:', result.data);
-            muatDataSiswa(); // Muat ulang data setelah berhasil
-        } else {
-            throw new Error(result.message);
-        }
+            alert(result.data.pesan || result.data); // Notifikasi sementara
+            muatDataSiswa();
+            resetFormSiswa();
+        } else { throw new Error(result.message); }
     })
     .catch(error => {
-        console.error('Error saat menyimpan data:', error);
+        alert('Error: ' + error.message);
+        resetFormSiswa();
     });
+}
+
+function handleAksiTabel(e) {
+    const id = e.target.dataset.id;
+    if (e.target.classList.contains('edit-btn')) {
+        // ... Logika untuk mengisi form saat edit
+    } else if (e.target.classList.contains('delete-btn')) {
+        if (confirm('Yakin ingin menghapus siswa ini?')) {
+            const payload = { action: 'hapusSiswa', payload: id };
+            fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        alert(res.data);
+                        muatDataSiswa();
+                    } else { throw new Error(res.message); }
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+    }
+}
+
+function resetFormSiswa() {
+    // ... Logika untuk reset form
 }
