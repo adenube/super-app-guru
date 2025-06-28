@@ -4,7 +4,6 @@
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 
-// Membuat koneksi ke Supabase dengan nama variabel yang benar
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ==========================================================
 
@@ -15,35 +14,31 @@ const rowsPerPage = 5;
 
 // --- Event Listener Utama ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Fungsi ini sekarang hanya memasang event listener ke elemen yang sudah ada di HTML
+    // Langsung pasang semua "kabel" ke tombol yang sudah ada di HTML
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
 
-    // Langsung muat data awal saat halaman siap
+    // Setelah semua siap, baru muat data
     muatDataSiswa();
 });
-
 
 // --- Fungsi-fungsi ---
 
 async function muatDataSiswa() {
     const emptyState = document.getElementById('emptyState');
-    if(emptyState) emptyState.innerHTML = `<p>Memuat data...</p>`;
+    if (emptyState) {
+        emptyState.innerHTML = `<p>Memuat data...</p>`;
+        emptyState.classList.remove('hidden');
+    }
     
     try {
-        const { data, error } = await supa
-            .from('Siswa')
-            .select('*')
-            .order('created_at', { ascending: false });
-
+        const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
         if (error) throw error;
-        
         semuaSiswaCache = data;
         currentPage = 1;
         tampilkanHalaman(currentPage);
-
     } catch (error) {
         console.error('Error saat memuat data siswa:', error);
         tampilkanNotifikasi('Gagal memuat data: ' + error.message, 'error');
@@ -76,12 +71,16 @@ function tambahBarisKeTabel(siswa) {
     row.id = `siswa-${siswa.id}`;
     row.className = 'border-t hover:bg-gray-50';
     row.innerHTML = `
-      <td class="py-3 px-4">${siswa.Nomor_Induk}</td><td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
-      <td class="py-3 px-4">${siswa.Kelas}</td><td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4"><div class="flex space-x-2">
-        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-        <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-      </div></td>`;
+      <td class="py-3 px-4">${siswa.Nomor_Induk}</td>
+      <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
+      <td class="py-3 px-4">${siswa.Kelas}</td>
+      <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
+      <td class="py-3 px-4">
+        <div class="flex space-x-2">
+          <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
+          <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
+        </div>
+      </td>`;
     tabelBody.appendChild(row);
 }
 
@@ -118,7 +117,7 @@ function gambarTombolPaginasi() {
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        if(page > 0 && page <= Math.ceil(semuaSiswaCache.length / rowsPerPage)) {
+        if (page > 0 && page <= Math.ceil(semuaSiswaCache.length / rowsPerPage)) {
             tampilkanHalaman(page);
         }
     }
@@ -146,17 +145,15 @@ async function handleSimpanSiswa(e) {
             tombolSimpan.innerHTML = "Menyimpan...";
             response = await supa.from('Siswa').insert([dataForm]);
         }
-
         if (response.error) throw response.error;
-
         tampilkanNotifikasi('Sukses! Data siswa berhasil diproses.', 'success');
         resetFormSiswa();
         muatDataSiswa();
-
     } catch (error) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
     } finally {
         tombolSimpan.disabled = false;
+        // Panggil resetForm di sini juga untuk memastikan tombol kembali normal
         resetFormSiswa();
     }
 }
@@ -165,7 +162,7 @@ function handleAksiTabel(e) {
     const id = e.target.dataset.id;
     if (e.target.classList.contains('edit-btn')) {
         const siswa = semuaSiswaCache.find(s => s.id === id);
-        if(siswa) {
+        if (siswa) {
             document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
             document.getElementById('ID_Siswa').value = siswa.id;
             document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
@@ -189,7 +186,7 @@ async function hapusDataSiswa(id) {
         if (error) throw error;
         tampilkanNotifikasi('Siswa berhasil dihapus.', 'warning');
         muatDataSiswa();
-    } catch(error) {
+    } catch (error) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
     }
 }
