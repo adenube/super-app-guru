@@ -1,5 +1,5 @@
 // ==========================================================
-//  PASTE URL WEB APP DARI APPS SCRIPT YANG KAMU SIMPAN DI SINI
+// PASTE URL WEB APP DARI APPS SCRIPT YANG KAMU SIMPAN DI SINI
 // ==========================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbwoymFxlkZKVnFQxSCd-e6JKzuEnmJndGEBMPb1s7AUpH69diV-vSh2RVubw15_UKzD/exec"; 
 // ==========================================================
@@ -11,8 +11,8 @@ const rowsPerPage = 5;
 
 // --- Event Listener Utama ---
 document.addEventListener('DOMContentLoaded', function() {
-    renderLayout(); // Render kerangka HTML dulu
-    muatDataSiswa(); // Lalu langsung muat datanya
+    renderLayout();
+    muatDataSiswa();
 });
 
 // --- Fungsi-fungsi ---
@@ -42,7 +42,6 @@ function renderLayout() {
             </div>
         </div>
     `;
-    // Attach event listeners setelah layout dirender
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
@@ -136,7 +135,9 @@ function gambarTombolPaginasi() {
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        if(page > 0) tampilkanHalaman(page);
+        if(page > 0 && page <= Math.ceil(semuaSiswaCache.length / rowsPerPage)) {
+            tampilkanHalaman(page);
+        }
     }
 }
 
@@ -168,13 +169,13 @@ function handleSimpanSiswa(e) {
     .then(response => response.json())
     .then(result => {
         if (result.status === 'success') {
-            alert(result.data.pesan || result.data);
+            tampilkanNotifikasi(result.data.pesan || result.data, 'success'); // DIGANTI
             muatDataSiswa();
             resetFormSiswa();
         } else { throw new Error(result.message); }
     })
     .catch(error => {
-        alert('Error: ' + error.message);
+        tampilkanNotifikasi('Error: ' + error.message, 'error'); // DIGANTI
         resetFormSiswa();
     });
 }
@@ -201,11 +202,11 @@ function handleAksiTabel(e) {
                 .then(r => r.json())
                 .then(res => {
                     if (res.status === 'success') {
-                        alert(res.data);
+                        tampilkanNotifikasi(res.data, 'warning'); // DIGANTI
                         muatDataSiswa();
                     } else { throw new Error(res.message); }
                 })
-                .catch(err => alert('Error: ' + err.message));
+                .catch(err => tampilkanNotifikasi('Error: ' + err.message, 'error')); // DIGANTI
         }
     }
 }
@@ -219,3 +220,18 @@ function resetFormSiswa() {
     tombolSimpan.disabled = false;
     document.getElementById('tombolBatalSiswa').classList.add('hidden');
 }
+
+// FUNGSI NOTIFIKASI ELEGAN
+function tampilkanNotifikasi(message, type) {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
+    notification.className = `fixed top-20 right-4 px-6 py-3 rounded-md shadow-lg text-white transition-all duration-300 z-50 ${bgColor}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => { notification.remove(); }, 300);
+    }, 3000);
+}
+</script>
