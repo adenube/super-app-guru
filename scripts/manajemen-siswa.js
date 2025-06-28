@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function renderLayout() {
     const container = document.getElementById('content-container');
+    if (!container) return;
+    
     container.innerHTML = `
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle">Form Tambah Murid Baru</h2>
                 <form id="formTambahMurid" class="space-y-4">
                     <input type="hidden" id="ID_Siswa">
@@ -32,7 +34,7 @@ function renderLayout() {
                     <div class="pt-2 flex justify-end gap-4"><button type="button" id="tombolBatalSiswa" class="hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button><button type="submit" id="tombolSimpanSiswa" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan Siswa Baru</button></div>
                 </form>
             </div>
-            <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Daftar Murid Terdaftar</h2>
                 <div class="overflow-x-auto"><table class="min-w-full bg-white"><thead class="bg-gray-100"><tr><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">No. Induk</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Nama</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Jenis Kelamin</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Aksi</th></tr></thead><tbody id="tabelSiswaBody"></tbody></table></div>
                 <div id="emptyState" class="text-center py-8 text-gray-500"><p>Memuat data...</p></div>
@@ -48,7 +50,9 @@ function renderLayout() {
 }
 
 function muatDataSiswa() {
-    document.getElementById('emptyState').innerHTML = `<p>Memuat data...</p>`;
+    const emptyState = document.getElementById('emptyState');
+    if(emptyState) emptyState.innerHTML = `<p>Memuat data...</p>`;
+    
     fetch(`${API_URL}?action=getSemuaSiswa`)
         .then(response => response.json())
         .then(result => {
@@ -60,7 +64,7 @@ function muatDataSiswa() {
         })
         .catch(error => {
             console.error('Error saat memuat data siswa:', error);
-            document.getElementById('emptyState').innerHTML = `<p class="text-red-500">Gagal memuat data: ${error.message}</p>`;
+            if(emptyState) emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
         });
 }
 
@@ -69,11 +73,12 @@ function tampilkanHalaman(page) {
     const tabelBody = document.getElementById('tabelSiswaBody');
     const emptyState = document.getElementById('emptyState');
     tabelBody.innerHTML = '';
+    
     if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
-        emptyState.classList.remove('hidden');
-        emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
+        if(emptyState) emptyState.classList.remove('hidden');
+        if(emptyState) emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
     } else {
-        emptyState.classList.add('hidden');
+        if(emptyState) emptyState.classList.add('hidden');
         const startIndex = (page - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         const dataHalamanIni = semuaSiswaCache.slice(startIndex, endIndex);
@@ -104,18 +109,36 @@ function gambarTombolPaginasi() {
     const totalRows = semuaSiswaCache.length;
     const totalPages = Math.ceil(totalRows / rowsPerPage);
     if (totalPages <= 1) return;
-    
-    // Logika untuk membuat tombol paginasi (Prev, 1, 2, 3, Next)
-    // ... (kode ini sama persis dengan yang sudah kita buat sebelumnya)
+
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&laquo;';
+    prevButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    prevButton.dataset.page = currentPage - 1;
+    if (currentPage === 1) { prevButton.disabled = true; prevButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(prevButton);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.innerText = i;
+        pageButton.dataset.page = i;
+        pageButton.className = 'px-3 py-1 rounded-md border ' + (i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100');
+        paginationControls.appendChild(pageButton);
+    }
+
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = '&raquo;';
+    nextButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    nextButton.dataset.page = currentPage + 1;
+    if (currentPage === totalPages) { nextButton.disabled = true; nextButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(nextButton);
 }
 
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        tampilkanHalaman(page);
+        if(page > 0) tampilkanHalaman(page);
     }
 }
-
 
 function handleSimpanSiswa(e) {
     e.preventDefault();
@@ -145,7 +168,7 @@ function handleSimpanSiswa(e) {
     .then(response => response.json())
     .then(result => {
         if (result.status === 'success') {
-            alert(result.data.pesan || result.data); // Notifikasi sementara
+            alert(result.data.pesan || result.data);
             muatDataSiswa();
             resetFormSiswa();
         } else { throw new Error(result.message); }
@@ -159,7 +182,18 @@ function handleSimpanSiswa(e) {
 function handleAksiTabel(e) {
     const id = e.target.dataset.id;
     if (e.target.classList.contains('edit-btn')) {
-        // ... Logika untuk mengisi form saat edit
+        const siswa = semuaSiswaCache.find(s => s[0] === id);
+        if(siswa) {
+            document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
+            document.getElementById('ID_Siswa').value = siswa[0];
+            document.getElementById('Nomor_Induk').value = siswa[1];
+            document.getElementById('Nama_Lengkap').value = siswa[2];
+            document.getElementById('Kelas').value = siswa[3];
+            document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa[4]}"]`).checked = true;
+            document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
+            document.getElementById('tombolBatalSiswa').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     } else if (e.target.classList.contains('delete-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             const payload = { action: 'hapusSiswa', payload: id };
@@ -177,5 +211,11 @@ function handleAksiTabel(e) {
 }
 
 function resetFormSiswa() {
-    // ... Logika untuk reset form
+    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
+    document.getElementById('formTambahMurid').reset();
+    document.getElementById('ID_Siswa').value = '';
+    const tombolSimpan = document.getElementById('tombolSimpanSiswa');
+    tombolSimpan.textContent = 'Simpan Siswa Baru';
+    tombolSimpan.disabled = false;
+    document.getElementById('tombolBatalSiswa').classList.add('hidden');
 }
