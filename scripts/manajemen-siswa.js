@@ -1,7 +1,7 @@
 // ==========================================================
 // PASTE URL WEB APP DARI APPS SCRIPT YANG KAMU SIMPAN DI SINI
 // ==========================================================
-const API_URL = "https://script.google.com/macros/s/AKfycbwoymFxlkZKVnFQxSCd-e6JKzuEnmJndGEBMPb1s7AUpH69diV-vSh2RVubw15_UKzD/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbxg1HyJhXd9Fckb3HD_u4C2l6XrjGbDSH8POg7dRNsA8Li0AgOCERqzQ5PWyUVRnC6h/exec"; 
 // ==========================================================
 
 // --- Variabel Global ---
