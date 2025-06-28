@@ -1,20 +1,17 @@
-// ==========================================================
-//          MASUKKAN KUNCI RAHASIA SUPABASE LO DI SINI
-// ==========================================================
+// GANTI DENGAN KUNCI RAHASIA SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// ==========================================================
 
 // --- Variabel Global ---
 let semuaSiswaCache = [];
 let currentPage = 1;
 const rowsPerPage = 5;
 
-// --- Event Listener Utama ---
+// --- Event Listener Utama (VERSI LEBIH STABIL) ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Langsung pasang semua "kabel" ke tombol yang sudah ada di HTML
+    // Langsung pasang semua "kabel" ke elemen HTML yang sudah pasti ada
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
@@ -28,17 +25,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function muatDataSiswa() {
     const emptyState = document.getElementById('emptyState');
-    if (emptyState) {
-        emptyState.innerHTML = `<p>Memuat data...</p>`;
-        emptyState.classList.remove('hidden');
-    }
+    if(emptyState) emptyState.innerHTML = `<p>Memuat data...</p>`;
     
     try {
-        const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supa
+            .from('Siswa')
+            .select('*')
+            .order('created_at', { ascending: false });
+
         if (error) throw error;
+        
         semuaSiswaCache = data;
         currentPage = 1;
         tampilkanHalaman(currentPage);
+
     } catch (error) {
         console.error('Error saat memuat data siswa:', error);
         tampilkanNotifikasi('Gagal memuat data: ' + error.message, 'error');
@@ -75,12 +75,10 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
       <td class="py-3 px-4">${siswa.Kelas}</td>
       <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4">
-        <div class="flex space-x-2">
-          <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-          <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        </div>
-      </td>`;
+      <td class="py-3 px-4"><div class="flex space-x-2">
+        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
+        <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
+      </div></td>`;
     tabelBody.appendChild(row);
 }
 
@@ -151,9 +149,7 @@ async function handleSimpanSiswa(e) {
         muatDataSiswa();
     } catch (error) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
-    } finally {
-        tombolSimpan.disabled = false;
-        // Panggil resetForm di sini juga untuk memastikan tombol kembali normal
+        // Kita tetap reset formnya walaupun error
         resetFormSiswa();
     }
 }
