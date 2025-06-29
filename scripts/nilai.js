@@ -252,7 +252,7 @@ function tampilkanNotifikasi(message, type) {
     }, 3000);
 }
 
-// --- TAMBAHKAN FUNGSI BARU INI DI BAGIAN BAWAH FILE ---
+// --- FUNGSI BARU UNTUK IMPORT CSV ---
 function handleImport() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) {
@@ -277,7 +277,7 @@ function handleImport() {
                     
                     let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
                     if (data.gagal > 0) {
-                        pesan += ` ${data.gagal} data gagal (siswa/topik tidak ditemukan).`;
+                        pesan += ` ${data.gagal} data gagal (nama siswa/kelas/topik tidak cocok).`;
                         tampilkanNotifikasi(pesan, 'warning');
                         console.warn('Item Gagal:', data.item_gagal);
                     } else {
