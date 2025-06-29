@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('formRpp').addEventListener('submit', handleSimpanRpp);
     document.getElementById('tombolTambahBaru').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tombolBatal').addEventListener('click', resetFormRpp);
-	
-	// Pasang listener untuk drop zone
     document.querySelectorAll('.drop-zone').forEach(setupDropZone);
 });
 
@@ -63,21 +61,25 @@ function buatKartuRpp(rppData) {
     div.innerHTML = `
         <p class="font-semibold text-gray-800">${rppData.Topik_Bahasan}</p>
         <p class="text-sm text-gray-600">${rppData.Mata_Pelajaran}</p>
-        <div class="text-xs text-gray-500 mt-2">${rppData.Pendekatan_Mengajar || ''}</div>
+        <div class="text-xs text-gray-500 mt-2 truncate" title="${rppData.Pendekatan_Mengajar || ''}">${rppData.Pendekatan_Mengajar || ''}</div>
         <div class="flex justify-end mt-2 space-x-2">
             <button class="edit-rpp-btn text-xs text-blue-600 hover:underline" data-id="${rppData.id}">Edit</button>
             <button class="hapus-rpp-btn text-xs text-red-600 hover:underline" data-id="${rppData.id}">Hapus</button>
         </div>
     `;
-    // Pasang listener untuk tombol edit dan hapus
+    div.addEventListener('dragstart', handleDragStart);
+    div.addEventListener('dragend', handleDragEnd);
+    
+    // Pasang listener langsung ke tombol di kartu yang baru dibuat
     div.querySelector('.edit-rpp-btn').addEventListener('click', (e) => {
-        e.stopPropagation(); // Hentikan event agar tidak menyebar
+        e.stopPropagation(); // Hentikan event agar tidak menyebar ke elemen kartu
         isiFormUntukEdit(e.target.dataset.id);
     });
     div.querySelector('.hapus-rpp-btn').addEventListener('click', (e) => {
         e.stopPropagation(); // Hentikan event agar tidak menyebar
         handleHapusRpp(e.target.dataset.id);
     });
+
     return div;
 }
 
@@ -89,7 +91,7 @@ function handleDragStart(e) {
 }
 
 function handleDragEnd(e) {
-    if (kartuYangDiDrag) {
+    if(kartuYangDiDrag) {
         kartuYangDiDrag.classList.remove('dragging');
     }
     kartuYangDiDrag = null;
@@ -100,15 +102,11 @@ function setupDropZone(zone) {
         e.preventDefault();
         zone.classList.add('drag-over-zone');
     });
-    zone.addEventListener('dragleave', e => {
-        zone.classList.remove('drag-over-zone');
-    });
+    zone.addEventListener('dragleave', e => zone.classList.remove('drag-over-zone'));
     zone.addEventListener('drop', async (e) => {
         e.preventDefault();
         zone.classList.remove('drag-over-zone');
-
-        // Gunakan referensi dari 'kartuYangDiDrag', bukan mencari ulang
-        if (kartuYangDiDrag && e.currentTarget === zone) {
+        if (kartuYangDiDrag) {
             zone.appendChild(kartuYangDiDrag);
             const statusBaru = zone.id.replace('kolom-', '');
             const idKartu = kartuYangDiDrag.id;
@@ -116,29 +114,18 @@ function setupDropZone(zone) {
             try {
                 const { error } = await supa.from('RencanaAjar').update({ Status_Kanban: statusBaru }).eq('id', idKartu);
                 if (error) throw error;
-                
                 tampilkanNotifikasi(`Status diubah menjadi "${statusBaru}"`, 'success');
                 const index = semuaRppCache.findIndex(rpp => rpp.id === idKartu);
                 if(index > -1) semuaRppCache[index].Status_Kanban = statusBaru;
             } catch (error) {
                 tampilkanNotifikasi("Gagal update status: " + error.message, 'error');
-                muatSemuaRpp(); // Kembalikan ke posisi semula jika gagal
+                muatSemuaRpp(); 
             }
         }
     });
 }
 
-
 // --- FUNGSI-FUNGSI UNTUK FORM & AKSI KARTU ---
-function handleAksiKartu(e) {
-    if (e.target.classList.contains('edit-rpp-btn')) {
-        isiFormUntukEdit(e.target.dataset.id);
-    }
-    if (e.target.classList.contains('hapus-rpp-btn')) {
-        handleHapusRpp(e.target.dataset.id);
-    }
-}
-
 async function handleSimpanRpp(e) {
     e.preventDefault();
     const tombolSimpan = document.getElementById('tombolSimpanRpp');
@@ -170,7 +157,6 @@ async function handleSimpanRpp(e) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
     } finally {
         tombolSimpan.disabled = false;
-        tombolSimpan.innerHTML = "Simpan Rencana";
     }
 }
 
@@ -187,6 +173,7 @@ function isiFormUntukEdit(id) {
         document.getElementById('Pendekatan_Mengajar').value = rpp.Pendekatan_Mengajar;
         document.getElementById('Link_Materi_Ajar').value = rpp.Link_Materi_Ajar;
         document.getElementById('tombolSimpanRpp').textContent = "Update Rencana";
+        document.getElementById('tombolBatal').classList.remove('hidden');
         container.scrollIntoView({ behavior: 'smooth' });
     }
 }
@@ -202,6 +189,9 @@ function resetFormRpp() {
     document.getElementById('formRpp').reset();
     document.getElementById('ID_Topik').value = '';
     document.getElementById('form-container').classList.add('hidden');
+    const tombolSimpan = document.getElementById('tombolSimpanRpp');
+    tombolSimpan.textContent = "Simpan Rencana";
+    tombolSimpan.disabled = false;
 }
 
 async function handleHapusRpp(id) {
