@@ -3,72 +3,101 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-    tampilkanHeaderTanggal();
-    muatJadwalHariIni();
+    muatJadwal();
+    document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
+    document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
+    document.getElementById('tombolBatal').addEventListener('click', resetForm);
 });
 
-function tampilkanHeaderTanggal() {
-    const sekarang = new Date();
-    const namaHari = sekarang.toLocaleDateString('id-ID', { weekday: 'long' });
-    const tanggalLengkap = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    document.getElementById('headerHari').textContent = `Jadwal Hari ${namaHari}`;
-    document.getElementById('headerTanggal').textContent = tanggalLengkap;
-}
-
-async function muatJadwalHariIni() {
-    const container = document.getElementById('jadwal-container');
-    const viewKosong = document.getElementById('jadwal-kosong');
-    container.innerHTML = '<p class="text-center text-gray-500">Mencari jadwal...</p>';
-
-    const namaHariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
-
+async function muatJadwal() {
+    const tbody = document.getElementById('jadwal-table-body');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Memuat jadwal...</td></tr>';
     try {
-        const { data, error } = await supa
-            .from('Jadwal')
-            .select(`*, RencanaAjar(Topik_Bahasan)`)
-            .eq('Hari', namaHariIni)
-            .order('Jam_Mulai');
-
+        const { data, error } = await supa.from('Jadwal').select('*').order('created_at');
         if (error) throw error;
-
+        tbody.innerHTML = '';
         if (data.length === 0) {
-            container.innerHTML = '';
-            viewKosong.classList.remove('hidden');
-            return;
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Belum ada jadwal dibuat.</td></tr>';
+        } else {
+            data.forEach(j => {
+                const row = document.createElement('tr');
+                row.className = 'border-t';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${j.Hari}</td>
+                    <td class="py-3 px-4">${j.Jam_Mulai.substring(0,5)} - ${j.Jam_Selesai.substring(0,5)}</td>
+                    <td class="py-3 px-4 font-semibold">${j.Mata_Pelajaran}</td>
+                    <td class="py-3 px-4">${j.Kelas}</td>
+                    <td class="py-3 px-4"><div class="flex space-x-2">
+                        <button class="edit-btn text-sm text-yellow-600" data-id="${j.id}">Edit</button>
+                        <button class="hapus-btn text-sm text-red-600" data-id="${j.id}">Hapus</button>
+                    </div></td>`;
+                tbody.appendChild(row);
+            });
         }
-
-        container.innerHTML = '';
-        viewKosong.classList.add('hidden');
-
-        data.forEach(jadwal => {
-            const card = document.createElement('div');
-            card.className = 'schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6';
-            
-            const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
-            const jamSelesai = jadwal.Jam_Selesai.substring(0, 5);
-            const topikBahasan = jadwal.RencanaAjar ? jadwal.RencanaAjar.Topik_Bahasan : 'Topik Telah Dihapus';
-
-            card.innerHTML = `
-                <div class="text-center flex-shrink-0">
-                    <p class="text-2xl font-bold">${jamMulai}</p>
-                    <p class="text-sm opacity-80">sampai</p>
-                    <p class="text-lg font-medium">${jamSelesai}</p>
-                </div>
-                <div class="border-l-2 border-white/50 pl-6">
-                    <p class="text-2xl font-bold">${topikBahasan}</p>
-                    <p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-
-    } catch (e) {
-        container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal: ${e.message}</p>`;
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Gagal memuat jadwal: ${e.message}</td></tr>`;
     }
 }
 
-// Untuk sementara, kita belum buat fungsi tambah/edit jadwal.
-// Lo bisa isi datanya langsung dari Supabase Table Editor dulu untuk tes.
-// Cukup isi kolom: Hari (e.g., 'Senin'), Jam_Mulai (e.g., '07:00'), Jam_Selesai (e.g., '08:30'),
-// ID_Topik (pilih dari RencanaAjar), dan Kelas (e.g., '7A').
+async function handleSimpanJadwal(e) {
+    e.preventDefault();
+    const id = document.getElementById('jadwal-id').value;
+    const dataForm = {
+        Hari: document.getElementById('jadwal-hari').value,
+        Jam_Mulai: document.getElementById('jadwal-jam-mulai').value,
+        Jam_Selesai: document.getElementById('jadwal-jam-selesai').value,
+        Mata_Pelajaran: document.getElementById('jadwal-mapel').value,
+        Kelas: document.getElementById('jadwal-kelas').value,
+    };
+    try {
+        let response;
+        if (id) {
+            response = await supa.from('Jadwal').update(dataForm).eq('id', id);
+        } else {
+            response = await supa.from('Jadwal').insert([dataForm]);
+        }
+        if (response.error) throw response.error;
+        resetForm();
+        muatJadwal();
+    } catch (error) {
+        alert('Gagal menyimpan jadwal: ' + error.message);
+    }
+}
+
+function handleAksiJadwal(e) {
+    if (e.target.classList.contains('edit-btn')) {
+        const row = e.target.closest('tr');
+        const cells = row.querySelectorAll('td');
+        document.getElementById('jadwal-id').value = e.target.dataset.id;
+        document.getElementById('jadwal-hari').value = cells[0].textContent;
+        document.getElementById('jadwal-jam-mulai').value = cells[1].textContent.split(' - ')[0];
+        document.getElementById('jadwal-jam-selesai').value = cells[1].textContent.split(' - ')[1];
+        document.getElementById('jadwal-mapel').value = cells[2].textContent;
+        document.getElementById('jadwal-kelas').value = cells[3].textContent;
+        document.getElementById('form-title').textContent = 'Edit Jadwal';
+        document.getElementById('tombolSimpan').textContent = 'Update';
+        document.getElementById('tombolBatal').classList.remove('hidden');
+    } else if (e.target.classList.contains('hapus-btn')) {
+        if (confirm('Yakin ingin menghapus jadwal ini?')) {
+            hapusJadwal(e.target.dataset.id);
+        }
+    }
+}
+
+async function hapusJadwal(id) {
+    try {
+        const { error } = await supa.from('Jadwal').delete().eq('id', id);
+        if (error) throw error;
+        muatJadwal();
+    } catch (error) {
+        alert('Gagal menghapus jadwal: ' + error.message);
+    }
+}
+
+function resetForm() {
+    document.getElementById('formJadwal').reset();
+    document.getElementById('jadwal-id').value = '';
+    document.getElementById('form-title').textContent = 'Tambah Jadwal Baru';
+    document.getElementById('tombolSimpan').textContent = 'Simpan';
+    document.getElementById('tombolBatal').classList.add('hidden');
+}

@@ -30,6 +30,25 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // --- Fungsi-fungsi Logika ---
+async function muatJadwalHariIni() {
+    const container = document.getElementById('jadwal-hari-ini');
+    container.innerHTML = '<h2 class="text-xl font-semibold text-gray-800 mb-4">Jadwal Hari Ini...</h2>';
+    
+    const namaHariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
+    try {
+        const { data, error } = await supa.from('Jadwal')
+            .select('*').eq('Hari', namaHariIni).order('Jam_Mulai');
+        if (error) throw error;
+        
+        if (data.length === 0) {
+            container.innerHTML += '<p class="text-gray-500">Tidak ada jadwal mengajar hari ini.</p>';
+        } else {
+            // Tampilkan jadwalnya... (logika sama seperti di jadwal.js)
+        }
+    } catch(e) {
+        container.innerHTML += `<p class="text-red-500">Gagal memuat jadwal: ${e.message}</p>`;
+    }
+}
 
 async function muatRekapSiswa() {
     const btn = document.getElementById('muatStatistikBtn');
