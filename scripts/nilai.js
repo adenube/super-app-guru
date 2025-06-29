@@ -1,4 +1,3 @@
-// ISI DENGAN KUNCI SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -11,24 +10,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadDropdowns() {
     try {
-        // Ambil data kelas untuk dropdown filter
-        const { data: kelasData, error: kelasError } = await supa.from('Siswa').select('Kelas');
-        if (kelasError) throw kelasError;
-        const daftarKelas = [...new Set(kelasData.map(item => item.Kelas))].sort();
+        const [kelasResult, topikResult] = await Promise.all([
+            supa.from('Siswa').select('Kelas'),
+            supa.from('RencanaAjar').select('id, Topik_Bahasan')
+        ]);
+
+        if (kelasResult.error) throw kelasResult.error;
+        const daftarKelas = [...new Set(kelasResult.data.map(item => item.Kelas))].sort();
         const filterDropdown = document.getElementById('filterKelas');
+        filterDropdown.innerHTML = '<option value="">Pilih Kelas</option>';
         daftarKelas.forEach(kelas => {
             filterDropdown.innerHTML += `<option value="${kelas}">${kelas}</option>`;
         });
 
-        // Ambil data topik untuk dropdown
-        const { data: topikData, error: topikError } = await supa.from('RencanaAjar').select('id, Topik_Bahasan');
-        if (topikError) throw topikError;
+        if (topikResult.error) throw topikResult.error;
         const topikSelect = document.getElementById('pilihTopik');
         topikSelect.innerHTML = '<option value="">Pilih Topik/Kegiatan</option>';
-        topikData.forEach(topik => {
-            topikSelect.innerHTML += `<option value="${topik.id}">${topik.Topik_Bahasan}</option>`;
-        });
-
+        if (topikResult.data.length === 0) {
+            topikSelect.innerHTML += '<option value="" disabled>Buat Rencana Ajar terlebih dahulu</option>';
+        } else {
+            topikResult.data.forEach(topik => {
+                topikSelect.innerHTML += `<option value="${topik.id}">${topik.Topik_Bahasan}</option>`;
+            });
+        }
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat data dropdown: ' + error.message, 'error');
     }
@@ -63,17 +67,16 @@ async function handleSimpanNilai(e) {
     tombolSimpan.disabled = true;
     tombolSimpan.innerHTML = "Menyimpan...";
 
-    // Cek apakah radio button nilai deskriptif sudah dipilih
     const nilaiDeskriptifTerpilih = document.querySelector('input[name="nilaiDeskriptif"]:checked');
 
     const dataForm = {
         ID_Siswa: document.getElementById('pilihSiswa').value,
-        ID_Topik: document.getElementById('pilihTopik').value, // <-- BUG-FIX: Menambahkan ID_Topik
+        ID_Topik: document.getElementById('pilihTopik').value,
         Tanggal_Penilaian: new Date().toISOString().slice(0, 10),
         Jenis_Nilai: 'Karakter',
         Aspek_Yang_Dinilai: document.getElementById('aspekDinilai').value,
-        Nilai_Skor: null, // Untuk nilai karakter, skor kita kosongkan
-        Nilai_Deskriptif: nilaiDeskriptifTerpilih ? nilaiDeskriptifTerpilih.value : null, // <-- FITUR BARU: Ambil dari radio button
+        Nilai_Skor: null,
+        Nilai_Deskriptif: nilaiDeskriptifTerpilih ? nilaiDeskriptifTerpilih.value : null,
         Umpan_Balik_Siswa: document.getElementById('umpanBalik').value
     };
 
