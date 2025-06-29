@@ -31,16 +31,17 @@
       </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto py-8 px-4">
+    <div class="max-w-4xl mx-auto py-8 px-4">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-blue-800">Jurnal Refleksi Mengajar</h1>
-            <button id="tombolTambahJurnal" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform hover:scale-105">
-                + Tulis Jurnal Baru
+            <button id="tombolTambahJurnal" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform hover:scale-105 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Tulis Jurnal Baru
             </button>
         </div>
 
-        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 id="form-title" class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2">Tulis Jurnal Refleksi Baru</h2>
+        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8 transition-all duration-500">
+            <h2 id="form-title" class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2"></h2>
             <form id="formJurnal" class="space-y-4">
                 <input type="hidden" id="id_jurnal">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -49,11 +50,13 @@
                         <input type="date" id="tanggal_jurnal" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
-                        <label for="pilihTopik" class="block text-sm font-medium text-gray-700">Topik Bahasan yang Diajarkan</label>
-                        <select id="pilihTopik" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                            <option value="">Memuat topik...</option>
-                        </select>
+                        <label for="pilihKelas" class="block text-sm font-medium text-gray-700">Untuk Kelas</label>
+                        <select id="pilihKelas" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Memuat kelas...</option></select>
                     </div>
+                </div>
+                <div>
+                    <label for="pilihTopik" class="block text-sm font-medium text-gray-700">Topik Bahasan yang Diajarkan</label>
+                    <select id="pilihTopik" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Memuat topik...</option></select>
                 </div>
                 <div>
                     <label for="catatan_refleksi" class="block text-sm font-medium text-gray-700">Catatan Refleksi</label>
@@ -72,10 +75,10 @@
 
         <div id="daftar-jurnal-container" class="bg-white rounded-lg shadow-lg p-6">
              <h2 class="text-xl font-semibold text-gray-800 mb-4">Riwayat Jurnal</h2>
-             <div id="jurnal-list" class="space-y-4">
-                </div>
+             <div id="jurnal-list" class="space-y-4"></div>
         </div>
     </div>
+    
     <script src="scripts/jurnal-mengajar.js"></script>
 </body>
 </html>
