@@ -58,7 +58,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Deskriptif</label>
-                        <div class="flex flex-wrap gap-4"><div class="radio-item"><input type="radio" id="nilai_sb" name="nilaiDeskriptif" value="Sangat Baik" required><label for="nilai_sb">Sangat Baik (SB)</label></div><div class="radio-item"><input type="radio" id="nilai_b" name="nilaiDeskriptif" value="Baik"><label for="nilai_b">Baik (B)</label></div><div class="radio-item"><input type="radio" id="nilai_c" name="nilaiDeskriptif" value="Cukup"><label for="nilai_c">Cukup (C)</label></div></div>
+                        <div class="flex flex-wrap gap-4"><div class="radio-item"><input type="radio" id="nilai_sb" name="nilaiDeskriptif" value="Sangat Baik" required><label for="nilai_sb">Sangat Baik</label></div><div class="radio-item"><input type="radio" id="nilai_b" name="nilaiDeskriptif" value="Baik"><label for="nilai_b">Baik</label></div><div class="radio-item"><input type="radio" id="nilai_c" name="nilaiDeskriptif" value="Cukup"><label for="nilai_c">Cukup</label></div></div>
                     </div>
                      <div>
                         <label for="umpanBalik" class="block text-sm font-medium text-gray-700">Umpan Balik / Motivasi</label>
@@ -69,9 +69,12 @@
             </div>
             <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Riwayat Penilaian Karakter</h2>
-                <div id="riwayatNilaiContainer" class="space-y-3">
-                    <p class="text-center text-gray-500 py-8">Pilih kelas untuk melihat riwayat penilaian.</p>
+                <div class="mb-4">
+                    <label for="filterKelasRiwayat" class="block text-sm font-medium text-gray-700">Tampilkan untuk Kelas:</label>
+                    <select id="filterKelasRiwayat" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Semua Kelas</option></select>
                 </div>
+                <div id="riwayatNilaiContainer" class="space-y-3"></div>
+                <div id="riwayatPaginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
             </div>
         </div>
     </div>
