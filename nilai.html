@@ -2,19 +2,19 @@
 <html lang="id">
 <head>
     <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Nilai - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-        .kanban-card { transition: all 0.2s ease-in-out; cursor: grab; }
-        .kanban-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-        .kanban-card:active { cursor: grabbing; }
-        .dragging { opacity: 0.5; transform: scale(1.05); }
-        .drag-over-zone { border-style: dashed; border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
-	</style>
+        /* Tambahkan style lain jika perlu */
+    </style>
 </head>
 <body class="min-h-screen bg-gray-100">
+    
     <nav class="bg-white shadow-md">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between">
@@ -23,59 +23,54 @@
             <div class="hidden md:flex items-center space-x-1">
                 <a href="index.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Manajemen Siswa</a>
                 <a href="dashboard.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Dashboard</a>
-                <a href="presensi.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Presensi</a>
+                <a href="presensi.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Presensi</a>
                 <a href="rencana-ajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Rencana Ajar</a>
-				<a href="nilai.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Nilai</a>
+                <a href="nilai.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Nilai</a>
             </div>
           </div>
         </div>
       </div>
     </nav>
-	
+
     <div class="max-w-7xl mx-auto py-8 px-4">
         <h1 class="text-3xl font-bold text-blue-800 mb-8">Manajemen Penilaian Siswa</h1>
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2">Form Penilaian</h2>
+                <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2">Form Penilaian Karakter/Sikap</h2>
                 <form id="formNilai" class="space-y-4">
                     <input type="hidden" id="ID_Nilai">
                     <div>
-                        <label for="pilihSiswa" class="block text-sm font-medium text-gray-700">Siswa</label>
-                        <select id="pilihSiswa" required class="w-full mt-1 p-2 border rounded-md"></select>
+                        <label for="filterKelas" class="block text-sm font-medium text-gray-700">Filter Kelas</label>
+                        <select id="filterKelas" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                            <option value="">Pilih Kelas Dulu</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="pilihTopik" class="block text-sm font-medium text-gray-700">Topik/Materi Penilaian</label>
-                        <select id="pilihTopik" required class="w-full mt-1 p-2 border rounded-md"></select>
-                    </div>
-                     <div>
-                        <label for="jenisNilai" class="block text-sm font-medium text-gray-700">Jenis Penilaian</label>
-                        <select id="jenisNilai" required class="w-full mt-1 p-2 border rounded-md">
-                            <option value="Kognitif">Kognitif (Angka)</option>
-                            <option value="Karakter">Karakter (Deskripsi)</option>
+                        <label for="pilihSiswa" class="block text-sm font-medium text-gray-700">Siswa</label>
+                        <select id="pilihSiswa" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                            <option value="">Pilih Siswa</option>
                         </select>
                     </div>
                     <div>
                         <label for="aspekDinilai" class="block text-sm font-medium text-gray-700">Aspek yang Dinilai</label>
-                        <input type="text" id="aspekDinilai" required placeholder="Contoh: Ulangan Harian 1, Sikap Jujur" class="w-full mt-1 p-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label for="nilaiSkor" class="block text-sm font-medium text-gray-700">Nilai Skor (0-100)</label>
-                        <input type="number" id="nilaiSkor" class="w-full mt-1 p-2 border rounded-md">
+                        <input type="text" id="aspekDinilai" required placeholder="Contoh: Kerjasama, Inisiatif, dll" class="w-full mt-1 p-2 border rounded-md">
                     </div>
                     <div>
                         <label for="nilaiDeskriptif" class="block text-sm font-medium text-gray-700">Nilai Deskriptif</label>
-                        <input type="text" id="nilaiDeskriptif" placeholder="Contoh: Sangat Baik, Perlu Peningkatan" class="w-full mt-1 p-2 border rounded-md">
+                        <input type="text" id="nilaiDeskriptif" placeholder="Contoh: Sangat Baik (SB), Baik (B), Cukup (C)" class="w-full mt-1 p-2 border rounded-md">
                     </div>
                      <div>
                         <label for="umpanBalik" class="block text-sm font-medium text-gray-700">Umpan Balik / Motivasi</label>
-                        <textarea id="umpanBalik" rows="3" placeholder="Tulis kata-kata penyemangat untuk siswa..." class="w-full mt-1 p-2 border rounded-md"></textarea>
+                        <textarea id="umpanBalik" rows="4" placeholder="Tulis kata-kata penyemangat untuk siswa..." class="w-full mt-1 p-2 border rounded-md"></textarea>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Nilai</button>
+                    <button type="submit" id="tombolSimpanNilai" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Nilai</button>
                 </form>
             </div>
             <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Riwayat Penilaian</h2>
-                </div>
+                <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Riwayat Penilaian Karakter</h2>
+                <div id="riwayatNilaiContainer" class="space-y-3">
+                    </div>
+            </div>
         </div>
     </div>
     <script src="scripts/nilai.js"></script>
