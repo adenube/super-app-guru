@@ -7,15 +7,10 @@ let semuaRppCache = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     muatSemuaRpp();
-
-    // Event listener untuk form
     document.getElementById('formRpp').addEventListener('submit', handleSimpanRpp);
     document.getElementById('tombolTambahBaru').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tombolBatal').addEventListener('click', resetFormRpp);
-    
-    // Event listener untuk drop zone
     document.querySelectorAll('.drop-zone').forEach(setupDropZone);
-    // Event listener untuk klik pada kartu (untuk edit dan hapus)
     document.querySelector('.grid').addEventListener('click', handleAksiKartu);
 });
 
@@ -26,8 +21,7 @@ async function muatSemuaRpp() {
         semuaRppCache = data;
         gambarKanbanBoard();
     } catch (error) {
-        console.error("Gagal memuat RPP:", error);
-        alert("Gagal memuat Rencana Ajar: " + error.message);
+        tampilkanNotifikasi("Gagal memuat Rencana Ajar: " + error.message, 'error');
     }
 }
 
@@ -47,7 +41,6 @@ function gambarKanbanBoard() {
     semuaRppCache.forEach(rpp => {
         const kartu = buatKartuRpp(rpp);
         const status = rpp.Status_Kanban || "Belum Dikerjakan";
-        
         if (status === 'Sedang Dikerjakan') {
             kolomInProgress.appendChild(kartu);
         } else if (status === 'Selesai') {
@@ -63,7 +56,6 @@ function buatKartuRpp(rppData) {
     div.id = rppData.id;
     div.className = 'kanban-card bg-white p-3 rounded-md shadow';
     div.draggable = true;
-    
     div.innerHTML = `
         <p class="font-semibold text-gray-800">${rppData.Topik_Bahasan}</p>
         <p class="text-sm text-gray-600">${rppData.Mata_Pelajaran}</p>
@@ -93,18 +85,19 @@ function setupDropZone(zone) {
         const idKartu = e.dataTransfer.getData('text/plain');
         const kartu = document.getElementById(idKartu);
         if (kartu && e.currentTarget.contains(zone)) {
-            zone.appendChild(kartu);
+            const container = zone.querySelector('[id^="container-"]');
+            container.appendChild(kartu);
             const statusBaru = zone.id.replace('kolom-', '');
             
             try {
                 const { error } = await supa.from('RencanaAjar').update({ Status_Kanban: statusBaru }).eq('id', idKartu);
                 if (error) throw error;
-                // Update cache lokal
+                tampilkanNotifikasi(`Status diubah menjadi "${statusBaru}"`, 'success');
                 const index = semuaRppCache.findIndex(rpp => rpp.id === idKartu);
                 if(index > -1) semuaRppCache[index].Status_Kanban = statusBaru;
             } catch (error) {
-                alert("Gagal update status: " + error.message);
-                muatSemuaRpp(); // Kembalikan ke posisi semula jika gagal
+                tampilkanNotifikasi("Gagal update status: " + error.message, 'error');
+                muatSemuaRpp(); 
             }
         }
     });
@@ -136,18 +129,18 @@ async function handleSimpanRpp(e) {
 
     try {
         let response;
-        if (idTopik) { // Mode Edit
+        if (idTopik) { 
             response = await supa.from('RencanaAjar').update(dataForm).eq('id', idTopik).select();
-        } else { // Mode Tambah Baru
+        } else { 
             dataForm.Status_Kanban = 'Belum Dikerjakan';
             response = await supa.from('RencanaAjar').insert([dataForm]).select();
         }
         if (response.error) throw response.error;
-        alert('Sukses! Rencana Ajar berhasil diproses.');
+        tampilkanNotifikasi('Sukses! Rencana Ajar berhasil diproses.', 'success');
         resetFormRpp();
         muatSemuaRpp();
     } catch (error) {
-        alert('Error: ' + error.message);
+        tampilkanNotifikasi('Error: ' + error.message, 'error');
     } finally {
         tombolSimpan.disabled = false;
         tombolSimpan.innerHTML = "Simpan Rencana";
@@ -189,10 +182,23 @@ async function handleHapusRpp(id) {
         try {
             const { error } = await supa.from('RencanaAjar').delete().eq('id', id);
             if (error) throw error;
-            alert('Rencana Ajar berhasil dihapus.');
+            tampilkanNotifikasi('Rencana Ajar berhasil dihapus.', 'warning');
             muatSemuaRpp();
         } catch (error) {
-            alert('Error: ' + error.message);
+            tampilkanNotifikasi('Error: ' + error.message, 'error');
         }
     }
+}
+
+function tampilkanNotifikasi(message, type) {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
+    notification.className = `fixed top-20 right-4 px-6 py-3 rounded-md shadow-lg text-white transition-all duration-300 z-50 ${bgColor}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => { notification.remove(); }, 300);
+    }, 3000);
 }
