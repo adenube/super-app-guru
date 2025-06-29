@@ -1,21 +1,13 @@
-// ISI DENGAN KUNCI RAHASIA SUPABASE-MU
+// GANTI DENGAN KUNCI SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// --- Variabel Global ---
 let rekapDetailCache = {};
 
-// --- Event Listener Utama ---
 document.addEventListener('DOMContentLoaded', function() {
-    setupEventListeners();
-    setDefaultDates();
-});
-
-function setupEventListeners() {
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
-    
     const modal = document.getElementById('detailModal');
     document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
     document.getElementById('closeModalXBtn').addEventListener('click', () => modal.classList.add('hidden'));
@@ -23,9 +15,6 @@ function setupEventListeners() {
         if (e.target.id === 'detailModal') modal.classList.add('hidden');
     });
     document.getElementById('rekapPresensiBody').addEventListener('click', handleCellClick);
-}
-
-function setDefaultDates() {
     const endDateInput = document.getElementById('endDate');
     const startDateInput = document.getElementById('startDate');
     const today = new Date();
@@ -33,26 +22,21 @@ function setDefaultDates() {
     oneWeekAgo.setDate(today.getDate() - 6);
     endDateInput.valueAsDate = today;
     startDateInput.valueAsDate = oneWeekAgo;
-}
-
-// --- Fungsi-fungsi Logika ---
+});
 
 async function muatRekapSiswa() {
     const btn = document.getElementById('muatStatistikBtn');
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     try {
-        const { data, error } = await supa.from('Siswa').select('Jenis_Kelamin');
+        const { data, error } = await supa.from('Siswa').select('id, Jenis_Kelamin');
         if (error) throw error;
-        
         const totalMurid = data.length;
         const totalLaki = data.filter(s => s.Jenis_Kelamin === 'Laki-laki').length;
         const totalPerempuan = totalMurid - totalLaki;
-
         document.getElementById('totalMurid').textContent = totalMurid;
         document.getElementById('totalLaki').textContent = totalLaki;
         document.getElementById('totalPerempuan').textContent = totalPerempuan;
-
     } catch (error) {
         tampilkanNotifikasi("Gagal memuat statistik: " + error.message, "error");
     } finally {
@@ -67,11 +51,9 @@ async function muatLaporanPresensi() {
     const emptyState = document.getElementById('emptyStateLaporan');
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
-
     if (!startDate || !endDate) {
         tampilkanNotifikasi("Silakan isi kedua tanggal filter.", "error"); return;
     }
-
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     tabelBody.innerHTML = '';
@@ -80,27 +62,18 @@ async function muatLaporanPresensi() {
 
     try {
         const { data, error } = await supa.rpc('get_rekap_presensi_detail', {
-            start_date: startDate,
-            end_date: endDate
+            start_date: startDate, end_date: endDate
         });
-
         if (error) throw error;
-
+        
         rekapDetailCache = data.detailedData;
         const summaryData = data.summaryData;
-
         if (summaryData && summaryData.length > 0) {
             emptyState.classList.add('hidden');
             summaryData.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'border-t hover:bg-blue-50';
-                row.innerHTML = `
-                  <td class="py-3 px-4 font-medium">${item.kelas}</td>
-                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="H">${item.H}</span></td>
-                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="S">${item.S}</span></td>
-                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="I">${item.I}</span></td>
-                  <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="A">${item.A}</span></td>
-                  <td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>`;
+                row.innerHTML = `<td class="py-3 px-4 font-medium">${item.kelas}</td><td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="H">${item.H}</span></td><td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="S">${item.S}</span></td><td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="I">${item.I}</span></td><td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="A">${item.A}</span></td><td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>`;
                 tabelBody.appendChild(row);
             });
         } else {
