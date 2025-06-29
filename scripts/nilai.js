@@ -271,6 +271,10 @@ function handleImport() {
         header: true,
         skipEmptyLines: true,
         complete: async function(results) {
+			// ===== TAMBAHKAN CCTV DI SINI =====
+            console.log("Header dari CSV:", results.meta.fields);
+            console.log("Baris data pertama:", results.data[0]);
+            // ==================================
             const dataToImport = results.data;
             console.log("Data setelah di-parse oleh PapaParse:", dataToImport); // CCTV untuk lihat hasil parse
 
