@@ -297,3 +297,82 @@ function tampilkanNotifikasi(message, type) {
         notification.remove();
     }, 3000);
 }
+
+// --- FUNGSI BARU UNTUK DOWNLOAD PDF ---
+async function handleDownloadJurnal() {
+    tampilkanNotifikasi('Mempersiapkan PDF...', 'success');
+    
+    const kelasFilter = document.getElementById('filterKelas').value;
+    const topikFilter = document.getElementById('filterTopik').value;
+
+    try {
+        // Ambil SEMUA data yang cocok dengan filter (tanpa paginasi)
+        let query = supa.from('JurnalMengajar')
+            .select(`*, RencanaAjar(Topik_Bahasan)`)
+            .order('Tanggal_Jurnal', { ascending: false });
+
+        if (kelasFilter) query = query.eq('Kelas_Diajar', kelasFilter);
+        if (topikFilter) query = query.eq('ID_Topik', topikFilter);
+        
+        const { data, error } = await query;
+        if (error) throw error;
+
+        if (data.length === 0) {
+            tampilkanNotifikasi('Tidak ada data untuk di-download.', 'warning');
+            return;
+        }
+
+        // Siapkan judul laporan
+        const judulLaporan = `Laporan Jurnal Mengajar (Kelas: ${kelasFilter || 'Semua'}, Topik: ${topikFilter ? document.getElementById('filterTopik').options[document.getElementById('filterTopik').selectedIndex].text : 'Semua'})`;
+        
+        // Buat elemen HTML sementara untuk di-print
+        const printArea = document.createElement('div');
+        printArea.style.padding = '20px';
+        printArea.innerHTML = `<h2 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">${judulLaporan}</h2>`;
+        
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.innerHTML = `
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tanggal</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Topik</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Kelas</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Refleksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        `;
+        const tbody = table.querySelector('tbody');
+        data.forEach(jurnal => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(jurnal.Tanggal_Jurnal).toLocaleDateString('id-ID')}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${jurnal.RencanaAjar.Topik_Bahasan}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${jurnal.Kelas_Diajar}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${jurnal.Catatan_Refleksi}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        printArea.appendChild(table);
+        document.body.appendChild(printArea); // Tambahkan ke body agar bisa "difoto"
+
+        // "Foto" elemen dan buat PDF
+        const { jsPDF } = window.jspdf;
+        html2canvas(printArea).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save("laporan-jurnal-mengajar.pdf");
+            document.body.removeChild(printArea); // Hapus elemen sementara
+        });
+
+    } catch(e) {
+        tampilkanNotifikasi('Gagal membuat PDF: ' + e.message, 'error');
+    }
+}
