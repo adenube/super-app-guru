@@ -39,48 +39,40 @@ async function muatDaftarKelas() {
 }
 
 // --- FUNGSI YANG DIPERBARUI DENGAN LOGIKA CEK ---
+// Ganti fungsi handleTampilkanSiswa yang lama dengan versi baru ini
 async function handleTampilkanSiswa() {
     const btn = document.getElementById('tampilkanSiswaBtn');
-    const container = document.getElementById('daftarSiswaContainer');
-    const simpanBtn = document.getElementById('simpanPresensiBtn');
-    
     btn.disabled = true;
-    btn.innerHTML = "Memeriksa...";
-    container.innerHTML = ''; // Kosongkan dulu
-    simpanBtn.classList.add('hidden'); // Sembunyikan tombol simpan
+    btn.innerHTML = "Memuat...";
     
     const tanggal = document.getElementById('tanggalPresensi').value;
     const kelas = document.getElementById('filterKelasPresensi').value;
 
-    if (!tanggal || !kelas) {
-        tampilkanNotifikasi('Silakan pilih tanggal dan kelas terlebih dahulu.', 'error');
+    if (!tanggal) {
+        tampilkanNotifikasi('Silakan pilih tanggal terlebih dahulu.', 'error');
         btn.disabled = false;
         btn.innerHTML = "Tampilkan Siswa";
         return;
     }
 
     try {
-        // 1. Ambil semua siswa dari kelas yang dipilih
-        const { data: semuaSiswaDiKelas, error: siswaError } = await supa.from('Siswa').select('id, Nama_Lengkap, Kelas').eq('Kelas', kelas);
+        // 1. Ambil semua siswa dari kelas yang dipilih (atau semua siswa jika tidak ada filter kelas)
+        let siswaQuery = supa.from('Siswa').select('id, Nama_Lengkap, Kelas');
+        if (kelas) {
+            siswaQuery = siswaQuery.eq('Kelas', kelas);
+        }
+        const { data: semuaSiswaDiPilihan, error: siswaError } = await siswaQuery;
         if (siswaError) throw siswaError;
 
-        // 2. Ambil data presensi yang sudah ada untuk tanggal & kelas itu
+        // 2. Ambil ID siswa yang sudah diabsen pada tanggal itu
         const { data: presensiData, error: presensiError } = await supa.from('Presensi')
             .select('ID_Siswa')
-            .eq('Tanggal_Presensi', tanggal)
-            .in('ID_Siswa', semuaSiswaDiKelas.map(s => s.id)); // Hanya cek siswa di kelas ini
+            .eq('Tanggal_Presensi', tanggal);
         if (presensiError) throw presensiError;
         
-        // 3. LOGIKA BARU: Cek apakah presensi sudah lengkap
-        if (semuaSiswaDiKelas.length > 0 && presensiData.length === semuaSiswaDiKelas.length) {
-            tampilkanNotifikasi(`Presensi untuk kelas ${kelas} sudah lengkap pada tanggal ini.`, 'success');
-            container.innerHTML = `<p class="text-center text-green-600 font-semibold">Presensi sudah lengkap.</p>`;
-            return; // Hentikan proses
-        }
-
-        // 4. Jika belum lengkap, saring siswa yang belum diabsen
+        // 3. Buat daftar ID yang sudah diabsen & lakukan filter di JavaScript
         const siswaSudahAbsen = presensiData.map(p => p.ID_Siswa);
-        siswaKelasCache = semuaSiswaDiKelas.filter(siswa => !siswaSudahAbsen.includes(siswa.id));
+        siswaKelasCache = semuaSiswaDiPilihan.filter(siswa => !siswaSudahAbsen.includes(siswa.id));
         
         currentPage = 1;
         tampilkanHalaman(currentPage);
