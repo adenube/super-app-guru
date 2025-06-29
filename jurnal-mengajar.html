@@ -34,13 +34,12 @@
     <div class="max-w-4xl mx-auto py-8 px-4">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-blue-800">Jurnal Refleksi Mengajar</h1>
-            <button id="tombolTambahJurnal" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform hover:scale-105 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                Tulis Jurnal Baru
+            <button id="tombolTambahJurnal" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+                + Tulis Jurnal Baru
             </button>
         </div>
 
-        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8 transition-all duration-500">
+        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
             <h2 id="form-title" class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2"></h2>
             <form id="formJurnal" class="space-y-4">
                 <input type="hidden" id="id_jurnal">
@@ -60,22 +59,40 @@
                 </div>
                 <div>
                     <label for="catatan_refleksi" class="block text-sm font-medium text-gray-700">Catatan Refleksi</label>
-                    <textarea id="catatan_refleksi" rows="5" required class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Apa yang berjalan baik? Apa yang bisa ditingkatkan? Momen menarik apa yang terjadi?"></textarea>
+                    <textarea id="catatan_refleksi" rows="5" required class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="Apa yang berjalan baik? ..."></textarea>
                 </div>
                 <div>
-                    <label for="link_dokumentasi" class="block text-sm font-medium text-gray-700">Link Dokumentasi (Foto/Video, Opsional)</label>
-                    <input type="url" id="link_dokumentasi" class="w-full mt-1 p-2 border border-gray-300 rounded-md" placeholder="https://...">
+                    <label for="link_dokumentasi" class="block text-sm font-medium text-gray-700">Link Dokumentasi (Opsional)</label>
+                    <input type="url" id="link_dokumentasi" class="w-full mt-1 p-2 border rounded-md" placeholder="https://...">
                 </div>
                 <div class="flex justify-end gap-4 pt-2">
-                    <button type="button" id="tombolBatal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button>
+                    <button type="button" id="tombolBatal" class="bg-gray-300 hover:bg-gray-400 font-medium py-2 px-4 rounded-md">Batal</button>
                     <button type="submit" id="tombolSimpan" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan Jurnal</button>
                 </div>
             </form>
         </div>
 
         <div id="daftar-jurnal-container" class="bg-white rounded-lg shadow-lg p-6">
-             <h2 class="text-xl font-semibold text-gray-800 mb-4">Riwayat Jurnal</h2>
-             <div id="jurnal-list" class="space-y-4"></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-semibold text-gray-800">Riwayat Jurnal</h2>
+                <button id="tombolDownload" class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-3 rounded-md text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Download
+                </button>
+             </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="filterKelas" class="block text-sm font-medium text-gray-700">Filter Kelas:</label>
+                    <select id="filterKelas" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Semua Kelas</option></select>
+                </div>
+                <div>
+                    <label for="filterTopik" class="block text-sm font-medium text-gray-700">Filter Topik:</label>
+                    <select id="filterTopik" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Semua Topik</option></select>
+                </div>
+            </div>
+             <div id="jurnal-list" class="space-y-4">
+                </div>
+             <div id="jurnalPaginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
         </div>
     </div>
     
