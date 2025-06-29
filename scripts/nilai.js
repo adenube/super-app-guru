@@ -266,14 +266,12 @@ function handleImport() {
     tombolImport.disabled = true;
     tombolImport.innerHTML = "Memproses...";
 
-    // Gunakan PapaParse untuk membaca file CSV
     Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async function(results) {
-            console.log("Data mentah dari CSV:", results.data); // CCTV untuk data mentah
-            
             const dataToImport = results.data;
+            console.log("Data setelah di-parse:", dataToImport); // Kita tetap log ini untuk debugging
 
             if (!dataToImport || dataToImport.length === 0) {
                 tampilkanNotifikasi('File CSV kosong atau tidak ada data.', 'error');
@@ -282,25 +280,25 @@ function handleImport() {
                 return;
             }
 
-            // --- VALIDASI HEADER YANG LEBIH BAIK ---
-            const requiredHeaders = ['Nama_Lengkap', 'Kelas', 'Topik_Bahasan', 'Aspek_Yang_Dinilai', 'Nilai_Skor'];
-            const actualHeaders = results.meta.fields;
-            const missingHeaders = requiredHeaders.filter(h => !actualHeaders.includes(h.trim()));
+            // --- VALIDASI YANG SUDAH DIPERBAIKI ---
+            // Kita akan membuat datanya lebih fleksibel
+            const dataUntukDikirim = dataToImport.map(item => {
+                // Supabase sensitif dengan nama kolom, jadi kita pastikan namanya benar
+                return {
+                    Nama_Lengkap: item.Nama_Lengkap || item["Nama Lengkap"],
+                    Kelas: item.Kelas,
+                    Topik_Bahasan: item.Topik_Bahasan || item["Topik Bahasan"],
+                    Aspek_Yang_Dinilai: item.Aspek_Yang_Dinilai || item["Aspek Yang Dinilai"],
+                    Nilai_Skor: item.Nilai_Skor || item["Nilai Skor"],
+                    Umpan_Balik_Siswa: item.Umpan_Balik_Siswa || item["Umpan Balik Siswa"]
+                };
+            });
 
-            if (missingHeaders.length > 0) {
-                tampilkanNotifikasi(`Format CSV salah! Kolom ini tidak ditemukan: ${missingHeaders.join(', ')}`, 'error');
-                tombolImport.disabled = false;
-                tombolImport.innerHTML = "Import & Simpan Nilai";
-                fileInput.value = '';
-                return;
-            }
-            // --- AKHIR VALIDASI ---
-
-            tampilkanNotifikasi(`Membaca ${dataToImport.length} baris data. Mencoba mengimpor...`, 'success');
+            tampilkanNotifikasi(`Membaca ${dataUntukDikirim.length} baris data. Mencoba mengimpor...`, 'success');
 
             try {
                 // Panggil fungsi SQL 'import_nilai_massal' di Supabase
-                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataToImport });
+                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataUntukDikirim });
 
                 if (error) throw error;
                 
@@ -316,7 +314,6 @@ function handleImport() {
 
             } catch(e) {
                 tampilkanNotifikasi('Error saat impor ke database: ' + e.message, 'error');
-                console.error("Error RPC Supabase:", e);
             } finally {
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
