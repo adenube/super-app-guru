@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterTopikRiwayat').addEventListener('change', () => muatRiwayatNilai(true));
     document.getElementById('riwayatPaginationControls').addEventListener('click', handleRiwayatPaginasi);
     document.getElementById('downloadRiwayatBtn').addEventListener('click', handleDownload);
-	document.getElementById('tombolImport').addEventListener('click', handleImport);
+    document.getElementById('tombolImport').addEventListener('click', handleImport);
     muatRiwayatNilai();
 });
 
@@ -24,7 +24,6 @@ async function loadDropdowns() {
             supa.from('Siswa').select('Kelas').order('Kelas'),
             supa.from('RencanaAjar').select('id, Topik_Bahasan').order('Topik_Bahasan')
         ]);
-
         if (kelasResult.error) throw kelasResult.error;
         const daftarKelas = [...new Set(kelasResult.data.map(item => item.Kelas))].sort();
         const filterDropdownForm = document.getElementById('filterKelas');
@@ -37,7 +36,6 @@ async function loadDropdowns() {
                 filterDropdownRiwayat.innerHTML += `<option value="${kelas}">${kelas}</option>`;
             }
         });
-
         if (topikResult.error) throw topikResult.error;
         const topikData = topikResult.data;
         const topikSelectForm = document.getElementById('pilihTopik');
@@ -121,25 +119,17 @@ async function muatRiwayatNilai(dariFilter = false) {
     const topikTerpilih = document.getElementById('filterTopikRiwayat').value;
     container.innerHTML = '<p class="text-center text-gray-500">Memuat riwayat...</p>';
     if (dariFilter) riwayatCurrentPage = 1;
-
     try {
-        let query = supa.from('Nilai')
-            .select(`id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa, Siswa!inner(Nama_Lengkap, Kelas)`, { count: 'exact' })
-            .eq('Jenis_Nilai', 'Karakter');
-        
+        let query = supa.from('Nilai').select(`id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa, Nilai_Skor, Jenis_Nilai, Siswa ( Nama_Lengkap, Kelas )`, { count: 'exact' }).order('Tanggal_Penilaian', { ascending: false }).order('created_at', { ascending: false });
         if (kelasTerpilih) {
-            query = query.eq('Siswa.Kelas', kelasTerpilih);
+            query = query.filter('Siswa.Kelas', 'eq', kelasTerpilih);
         }
         if (topikTerpilih) {
             query = query.eq('ID_Topik', topikTerpilih);
         }
-        
         const startIndex = (riwayatCurrentPage - 1) * riwayatRowsPerPage;
-        const { data, error, count } = await query
-            .order('Tanggal_Penilaian', { ascending: false })
-            .order('created_at', { ascending: false })
-            .range(startIndex, startIndex + riwayatRowsPerPage - 1);
-        
+        query = query.range(startIndex, startIndex + riwayatRowsPerPage - 1);
+        const { data, error, count } = await query;
         if (error) throw error;
         riwayatNilaiCache = data;
         gambarRiwayat(count);
@@ -158,14 +148,17 @@ function gambarRiwayat(totalRows) {
         riwayatNilaiCache.forEach(nilai => {
             const card = document.createElement('div');
             card.className = 'bg-gray-50 border rounded-lg p-4 transition hover:shadow-md';
+            const nilaiTampil = nilai.Jenis_Nilai === 'Kognitif' 
+                ? `<span class="font-bold text-blue-700">${nilai.Nilai_Skor}</span>`
+                : `<span class="font-bold text-green-700">${nilai.Nilai_Deskriptif}</span>`;
             card.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div><p class="font-bold text-blue-700">${nilai.Siswa.Nama_Lengkap}</p><p class="text-sm text-gray-600">${nilai.Siswa.Kelas}</p></div>
                     <p class="text-xs text-gray-500">${new Date(nilai.Tanggal_Penilaian).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
                 </div>
                 <div class="mt-3 pt-3 border-t">
-                    <p class="text-sm"><span class="font-semibold">Aspek:</span> ${nilai.Aspek_Yang_Dinilai}</p>
-                    <p class="text-sm"><span class="font-semibold">Nilai:</span> <span class="font-bold text-green-700">${nilai.Nilai_Deskriptif}</span></p>
+                    <p class="text-sm"><span class="font-semibold">Aspek:</span> ${nilai.Aspek_Yang_Dinilai} (${nilai.Jenis_Nilai})</p>
+                    <p class="text-sm"><span class="font-semibold">Nilai:</span> ${nilaiTampil}</p>
                     <p class="text-sm mt-2 italic text-indigo-800">"${nilai.Umpan_Balik_Siswa || 'Tidak ada umpan balik.'}"</p>
                 </div>`;
             container.appendChild(card);
@@ -209,19 +202,18 @@ function handleRiwayatPaginasi(e) {
 
 function handleDownload() {
     tampilkanNotifikasi('Mempersiapkan data unduhan...', 'success');
-    const dataToExport = riwayatNilaiCache.map(nilai => {
-        return {
-            Tanggal: new Date(nilai.Tanggal_Penilaian).toLocaleDateString('id-ID'),
-            Nama_Siswa: nilai.Siswa.Nama_Lengkap,
-            Kelas: nilai.Siswa.Kelas,
-            Aspek_Dinilai: nilai.Aspek_Yang_Dinilai,
-            Nilai: nilai.Nilai_Deskriptif,
-            Umpan_Balik: `"${(nilai.Umpan_Balik_Siswa || '').replace(/"/g, '""')}"`
-        };
-    });
+    const dataToExport = riwayatNilaiCache.map(nilai => ({
+        Tanggal: new Date(nilai.Tanggal_Penilaian).toLocaleDateString('id-ID'),
+        Nama_Siswa: nilai.Siswa.Nama_Lengkap,
+        Kelas: nilai.Siswa.Kelas,
+        Jenis_Nilai: nilai.Jenis_Nilai,
+        Aspek_Dinilai: nilai.Aspek_Yang_Dinilai,
+        Nilai_Skor: nilai.Nilai_Skor,
+        Nilai_Deskriptif: nilai.Nilai_Deskriptif,
+        Umpan_Balik: `"${(nilai.Umpan_Balik_Siswa || '').replace(/"/g, '""')}"`
+    }));
     if (dataToExport.length === 0) {
-        tampilkanNotifikasi('Tidak ada data untuk di-download.', 'warning');
-        return;
+        tampilkanNotifikasi('Tidak ada data untuk di-download.', 'warning'); return;
     }
     const headers = Object.keys(dataToExport[0]);
     const csvContent = [
@@ -232,7 +224,7 @@ function handleDownload() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `laporan_nilai_karakter.csv`);
+    link.setAttribute("download", `laporan_nilai.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -250,57 +242,4 @@ function tampilkanNotifikasi(message, type) {
         notification.style.transform = 'translateY(-20px)';
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
-}
-
-// --- FUNGSI BARU UNTUK IMPORT CSV ---
-function handleImport() {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput.files.length === 0) {
-        tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const tombolImport = document.getElementById('tombolImport');
-    tombolImport.disabled = true;
-    tombolImport.innerHTML = "Memproses...";
-
-    Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async function(results) {
-            const dataToImport = results.data;
-            if (dataToImport.length > 0) {
-                try {
-                    const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataToImport });
-                    if (error) throw error;
-                    
-                    let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
-                    if (data.gagal > 0) {
-                        pesan += ` ${data.gagal} data gagal (nama siswa/kelas/topik tidak cocok).`;
-                        tampilkanNotifikasi(pesan, 'warning');
-                        console.warn('Item Gagal:', data.item_gagal);
-                    } else {
-                        tampilkanNotifikasi(pesan, 'success');
-                    }
-                    muatRiwayatNilai(); // Refresh riwayat untuk menampilkan data baru
-                } catch(e) {
-                    tampilkanNotifikasi('Error saat impor: ' + e.message, 'error');
-                } finally {
-                    tombolImport.disabled = false;
-                    tombolImport.innerHTML = "Import & Simpan Nilai";
-                    fileInput.value = ''; // Reset input file
-                }
-            } else {
-                tampilkanNotifikasi('File CSV kosong atau formatnya salah.', 'error');
-                tombolImport.disabled = false;
-                tombolImport.innerHTML = "Import & Simpan Nilai";
-            }
-        },
-        error: function(err) {
-            tampilkanNotifikasi('Gagal membaca file CSV: ' + err.message, 'error');
-            tombolImport.disabled = false;
-            tombolImport.innerHTML = "Import & Simpan Nilai";
-        }
-    });
 }
