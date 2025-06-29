@@ -158,16 +158,14 @@ async function handleSimpanPresensi() {
 
     try {
         if (dataUntukDisimpan.length > 0) {
-            // GANTI .insert() MENJADI .upsert() YANG LEBIH CANGGIH
             const { error } = await supa
                 .from('Presensi')
-                .upsert(dataUntukDisimpan, { onConflict: 'presensi_tanggal_id_siswa_unique' });
+                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' }); // <-- PERBAIKAN DI SINI
 
             if (error) throw error;
         }
         tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
         
-        // Reset tampilan setelah berhasil
         siswaKelasCache = []; 
         document.getElementById('daftarSiswaContainer').innerHTML = '<p class="text-center text-green-600 font-semibold">Presensi sudah disimpan. Silakan pilih kelas atau tanggal lain.</p>';
         btn.classList.add('hidden');
