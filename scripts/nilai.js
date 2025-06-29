@@ -253,7 +253,8 @@ function tampilkanNotifikasi(message, type) {
 }
 
 // --- FUNGSI BARU UNTUK IMPORT CSV ---
-function handleImport() {
+// GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
+async function handleImport() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) {
         tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
@@ -265,36 +266,56 @@ function handleImport() {
     tombolImport.disabled = true;
     tombolImport.innerHTML = "Memproses...";
 
+    // Gunakan PapaParse untuk membaca file CSV
     Papa.parse(file, {
-        header: true,
+        header: true, // PENTING: Anggap baris pertama adalah header
         skipEmptyLines: true,
         complete: async function(results) {
-            const dataToImport = results.data;
-            if (dataToImport.length > 0) {
-                try {
-                    const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataToImport });
-                    if (error) throw error;
-                    
-                    let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
-                    if (data.gagal > 0) {
-                        pesan += ` ${data.gagal} data gagal (nama siswa/kelas/topik tidak cocok).`;
-                        tampilkanNotifikasi(pesan, 'warning');
-                        console.warn('Item Gagal:', data.item_gagal);
-                    } else {
-                        tampilkanNotifikasi(pesan, 'success');
-                    }
-                    muatRiwayatNilai(); // Refresh riwayat untuk menampilkan data baru
-                } catch(e) {
-                    tampilkanNotifikasi('Error saat impor: ' + e.message, 'error');
-                } finally {
-                    tombolImport.disabled = false;
-                    tombolImport.innerHTML = "Import & Simpan Nilai";
-                    fileInput.value = ''; // Reset input file
-                }
-            } else {
+            const dataDariCsv = results.data;
+            console.log("Data setelah di-parse oleh PapaParse:", dataDariCsv); // CCTV #1
+
+            if (!dataDariCsv || dataDariCsv.length === 0) {
                 tampilkanNotifikasi('File CSV kosong atau formatnya salah.', 'error');
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
+                return;
+            }
+
+            // Pastikan semua kolom yang dibutuhkan ada
+            const barisPertama = dataDariCsv[0];
+            if (!('Nama_Lengkap' in barisPertama && 'Kelas' in barisPertama && 'Topik_Bahasan' in barisPertama && 'Nilai_Skor' in barisPertama)) {
+                tampilkanNotifikasi('Format CSV salah! Pastikan ada kolom: Nama_Lengkap, Kelas, Topik_Bahasan, Nilai_Skor.', 'error');
+                tombolImport.disabled = false;
+                tombolImport.innerHTML = "Import & Simpan Nilai";
+                return;
+            }
+
+            tampilkanNotifikasi(`Mencoba mengimpor ${dataDariCsv.length} data...`, 'success');
+
+            try {
+                // Kirim data ke fungsi SQL di Supabase
+                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataDariCsv });
+
+                if (error) throw error; // Lemparkan error jika ada
+                
+                // Proses hasil dari Supabase
+                let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
+                if (data.gagal > 0) {
+                    pesan += ` ${data.gagal} data gagal (nama/kelas/topik tidak cocok).`;
+                    tampilkanNotifikasi(pesan, 'warning');
+                    console.warn('Item Gagal:', data.item_gagal);
+                } else {
+                    tampilkanNotifikasi(pesan, 'success');
+                }
+                muatRiwayatNilai(true); // Refresh riwayat untuk menampilkan data baru
+
+            } catch(e) {
+                console.error("Error saat memanggil RPC Supabase:", e); // CCTV #2
+                tampilkanNotifikasi('Error saat impor: ' + e.message, 'error');
+            } finally {
+                tombolImport.disabled = false;
+                tombolImport.innerHTML = "Import & Simpan Nilai";
+                fileInput.value = ''; // Reset input file
             }
         },
         error: function(err) {
