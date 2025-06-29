@@ -62,12 +62,17 @@ async function handleTampilkanSiswa() {
         if (siswaError) throw siswaError;
 
         const { data: presensiData, error: presensiError } = await supa.from('Presensi')
-            .select('ID_Siswa')
+            .select('ID_Siswa, Status, Catatan') // Ambil juga status & catatan
             .eq('Tanggal_Presensi', tanggal);
         if (presensiError) throw presensiError;
         
-        const siswaSudahAbsen = presensiData.map(p => p.ID_Siswa);
-        siswaKelasCache = semuaSiswaDiKelas.filter(siswa => !siswaSudahAbsen.includes(siswa.id));
+        // Buat peta data presensi yang sudah ada untuk memudahkan pengecekan
+        const presensiMap = new Map(presensiData.map(p => [p.ID_Siswa, p]));
+        
+        // Tampilkan semua siswa, tapi beri tanda jika sudah diabsen
+        siswaKelasCache = semuaSiswaDiKelas.map(siswa => {
+            return { ...siswa, presensi: presensiMap.get(siswa.id) };
+        });
         
         currentPage = 1;
         tampilkanHalaman(currentPage);
@@ -87,7 +92,7 @@ function tampilkanHalaman(page) {
     container.innerHTML = '';
     
     if (!siswaKelasCache || siswaKelasCache.length === 0) {
-        container.innerHTML = '<p class="text-center text-green-600 font-semibold">Tidak ada siswa yang perlu diabsen untuk pilihan ini.</p>';
+        container.innerHTML = '<p class="text-center text-gray-500">Tidak ada siswa di kelas ini.</p>';
         simpanBtn.classList.add('hidden');
     } else {
         simpanBtn.classList.remove('hidden');
@@ -97,23 +102,71 @@ function tampilkanHalaman(page) {
 
         dataHalamanIni.forEach(siswa => {
             const divSiswa = document.createElement('div');
-            divSiswa.className = 'siswa-row p-4 border rounded-lg flex flex-col md:flex-row items-center gap-4';
+            const sudahDiabsen = !!siswa.presensi;
+            const status = sudahDiabsen ? siswa.presensi.Status : 'Hadir';
+            const catatan = sudahDiabsen ? siswa.presensi.Catatan : '';
+
+            divSiswa.className = `siswa-row p-4 border rounded-lg flex flex-col md:flex-row items-center gap-4 ${sudahDiabsen ? 'bg-green-50' : 'bg-white'}`;
             divSiswa.dataset.id = siswa.id;
+            
             divSiswa.innerHTML = `
-                <div class="flex-grow"><p class="font-semibold text-gray-800">${siswa.Nama_Lengkap}</p><p class="text-sm text-gray-500">${siswa.Kelas}</p></div>
-                <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-center">
-                    <div class="radio-item"><input type="radio" id="h-${siswa.id}" name="status-${siswa.id}" value="Hadir" checked><label for="h-${siswa.id}">H</label></div>
-                    <div class="radio-item"><input type="radio" id="s-${siswa.id}" name="status-${siswa.id}" value="Sakit"><label for="s-${siswa.id}">S</label></div>
-                    <div class="radio-item"><input type="radio" id="i-${siswa.id}" name="status-${siswa.id}" value="Izin"><label for="i-${siswa.id}">I</label></div>
-                    <div class="radio-item"><input type="radio" id="a-${siswa.id}" name="status-${siswa.id}" value="Alpha"><label for="a-${siswa.id}">A</label></div>
+                <div class="flex-grow">
+                    <p class="font-semibold text-gray-800">${siswa.Nama_Lengkap}</p>
+                    <p class="text-sm text-gray-500">${siswa.Kelas}</p>
                 </div>
-                <div class="w-full md:w-1/3 mt-2 md:mt-0"><input type="text" placeholder="Catatan (opsional)" class="catatan-presensi w-full text-sm px-3 py-1 border rounded-md"></div>
+                <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-center">
+                    <div class="radio-item"><input type="radio" id="h-${siswa.id}" name="status-${siswa.id}" value="Hadir" ${status === 'Hadir' ? 'checked' : ''}><label for="h-${siswa.id}">H</label></div>
+                    <div class="radio-item"><input type="radio" id="s-${siswa.id}" name="status-${siswa.id}" value="Sakit" ${status === 'Sakit' ? 'checked' : ''}><label for="s-${siswa.id}">S</label></div>
+                    <div class="radio-item"><input type="radio" id="i-${siswa.id}" name="status-${siswa.id}" value="Izin" ${status === 'Izin' ? 'checked' : ''}><label for="i-${siswa.id}">I</label></div>
+                    <div class="radio-item"><input type="radio" id="a-${siswa.id}" name="status-${siswa.id}" value="Alpha" ${status === 'Alpha' ? 'checked' : ''}><label for="a-${siswa.id}">A</label></div>
+                </div>
+                <div class="w-full md:w-1/3 mt-2 md:mt-0"><input type="text" placeholder="Catatan (opsional)" class="catatan-presensi w-full text-sm px-3 py-1 border rounded-md" value="${catatan}"></div>
             `;
             container.appendChild(divSiswa);
         });
     }
     gambarTombolPaginasi();
 }
+
+async function handleSimpanPresensi() {
+    const btn = document.getElementById('simpanPresensiBtn');
+    btn.disabled = true;
+    btn.innerHTML = "Menyimpan...";
+    
+    const dataUntukDisimpan = [];
+    const tanggal = document.getElementById('tanggalPresensi').value;
+
+    document.querySelectorAll('.siswa-row').forEach(baris => {
+        const idSiswa = baris.dataset.id;
+        const statusTerpilih = baris.querySelector(`input[name="status-${idSiswa}"]:checked`);
+        if (statusTerpilih) {
+            dataUntukDisimpan.push({
+                Tanggal_Presensi: tanggal,
+                ID_Siswa: idSiswa,
+                Status: statusTerpilih.value,
+                Catatan: baris.querySelector('.catatan-presensi').value
+            });
+        }
+    });
+
+    try {
+        if (dataUntukDisimpan.length > 0) {
+            // Gunakan .upsert() yang lebih kuat
+            const { error } = await supa
+                .from('Presensi')
+                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' });
+            if (error) throw error;
+        }
+        tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan/diperbarui.', 'success');
+    } catch (error) {
+        tampilkanNotifikasi('Error saat menyimpan: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Simpan Presensi";
+    }
+}
+
+// --- FUNGSI-FUNGSI LAIN (gambarTombolPaginasi, handlePaginasi, tampilkanNotifikasi) TIDAK BERUBAH ---
 
 function gambarTombolPaginasi() {
     const paginationControls = document.getElementById('paginationControlsPresensi');
@@ -152,47 +205,6 @@ function handlePaginasi(e) {
         if (page > 0) {
             tampilkanHalaman(page);
         }
-    }
-}
-
-async function handleSimpanPresensi() {
-    const btn = document.getElementById('simpanPresensiBtn');
-    btn.disabled = true;
-    btn.innerHTML = "Menyimpan...";
-    
-    const dataUntukDisimpan = [];
-    const tanggal = document.getElementById('tanggalPresensi').value;
-
-    document.querySelectorAll('.siswa-row').forEach(baris => {
-        const idSiswa = baris.dataset.id;
-        const statusTerpilih = baris.querySelector(`input[name="status-${idSiswa}"]:checked`);
-        if (statusTerpilih) {
-            dataUntukDisimpan.push({
-                Tanggal_Presensi: tanggal,
-                ID_Siswa: idSiswa,
-                Status: statusTerpilih.value,
-                Catatan: baris.querySelector('.catatan-presensi').value
-            });
-        }
-    });
-
-    try {
-        if (dataUntukDisimpan.length > 0) {
-            // Kita kembali ke .insert() yang lebih sederhana dan aman
-            const { error } = await supa.from('Presensi').insert(dataUntukDisimpan);
-            if (error) throw error;
-        }
-        tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
-        
-        siswaKelasCache = []; 
-        tampilkanHalaman(1); 
-        document.getElementById('simpanPresensiBtn').classList.add('hidden');
-
-    } catch (error) {
-        tampilkanNotifikasi('Error saat menyimpan: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "Simpan Presensi";
     }
 }
 
