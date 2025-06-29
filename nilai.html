@@ -2,19 +2,20 @@
 <html lang="id">
 <head>
     <base target="_top">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Nilai - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-        /* Tambahkan style lain jika perlu */
+        .radio-item label { display: flex; align-items: center; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 2px solid #e5e7eb; }
+        .radio-item input[type="radio"] { position: absolute; opacity: 0; }
+        .radio-item input[type="radio"]:checked + label { border-color: #3b82f6; background-color: #eff6ff; }
+        .radio-item label::before { content: ''; width: 18px; height: 18px; border-radius: 50%; margin-right: 8px; border: 2px solid #d1d5db; }
+        .radio-item input[type="radio"]:checked + label::before { border: 5px solid #3b82f6; background-color: white; }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100">
-    
     <nav class="bg-white shadow-md">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between">
@@ -41,37 +42,24 @@
                     <input type="hidden" id="ID_Nilai">
                     <div>
                         <label for="filterKelas" class="block text-sm font-medium text-gray-700">Filter Kelas</label>
-                        <select id="filterKelas" class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                            <option value="">Pilih Kelas Dulu</option>
-                        </select>
+                        <select id="filterKelas" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Kelas</option></select>
                     </div>
                     <div>
                         <label for="pilihSiswa" class="block text-sm font-medium text-gray-700">Siswa</label>
-                        <select id="pilihSiswa" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
-                            <option value="">Pilih Siswa</option>
-                        </select>
+                        <select id="pilihSiswa" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Siswa</option></select>
                     </div>
                     <div>
+                        <label for="pilihTopik" class="block text-sm font-medium text-gray-700">Topik/Kegiatan Penilaian</label>
+                        <select id="pilihTopik" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Topik</option></select>
+                    </div>
+                     <div>
                         <label for="aspekDinilai" class="block text-sm font-medium text-gray-700">Aspek yang Dinilai</label>
-                        <input type="text" id="aspekDinilai" required placeholder="Contoh: Kerjasama, Inisiatif, dll" class="w-full mt-1 p-2 border rounded-md">
+                        <input type="text" id="aspekDinilai" required placeholder="Contoh: Kerjasama, Inisiatif" class="w-full mt-1 p-2 border rounded-md">
                     </div>
                     <div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">Nilai Deskriptif</label>
-						<div class="flex flex-wrap gap-4">
-							<div class="radio-item">
-								<input type="radio" id="nilai_sb" name="nilaiDeskriptif" value="Sangat Baik" required>
-								<label for="nilai_sb">Sangat Baik (SB)</label>
-							</div>
-							<div class="radio-item">
-								<input type="radio" id="nilai_b" name="nilaiDeskriptif" value="Baik">
-								<label for="nilai_b">Baik (B)</label>
-							</div>
-							<div class="radio-item">
-								<input type="radio" id="nilai_c" name="nilaiDeskriptif" value="Cukup">
-								<label for="nilai_c">Cukup (C)</label>
-							</div>
-						</div>
-					</div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Deskriptif</label>
+                        <div class="flex flex-wrap gap-4"><div class="radio-item"><input type="radio" id="nilai_sb" name="nilaiDeskriptif" value="Sangat Baik" required><label for="nilai_sb">Sangat Baik (SB)</label></div><div class="radio-item"><input type="radio" id="nilai_b" name="nilaiDeskriptif" value="Baik"><label for="nilai_b">Baik (B)</label></div><div class="radio-item"><input type="radio" id="nilai_c" name="nilaiDeskriptif" value="Cukup"><label for="nilai_c">Cukup (C)</label></div></div>
+                    </div>
                      <div>
                         <label for="umpanBalik" class="block text-sm font-medium text-gray-700">Umpan Balik / Motivasi</label>
                         <textarea id="umpanBalik" rows="4" placeholder="Tulis kata-kata penyemangat untuk siswa..." class="w-full mt-1 p-2 border rounded-md"></textarea>
@@ -82,7 +70,8 @@
             <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Riwayat Penilaian Karakter</h2>
                 <div id="riwayatNilaiContainer" class="space-y-3">
-                    </div>
+                    <p class="text-center text-gray-500 py-8">Pilih kelas untuk melihat riwayat penilaian.</p>
+                </div>
             </div>
         </div>
     </div>
