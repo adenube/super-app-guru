@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filterTopikRiwayat').addEventListener('change', () => muatRiwayatNilai(true));
     document.getElementById('riwayatPaginationControls').addEventListener('click', handleRiwayatPaginasi);
     document.getElementById('downloadRiwayatBtn').addEventListener('click', handleDownload);
+	document.getElementById('tombolImport').addEventListener('click', handleImport);
     muatRiwayatNilai();
 });
 
@@ -249,4 +250,57 @@ function tampilkanNotifikasi(message, type) {
         notification.style.transform = 'translateY(-20px)';
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
+}
+
+// --- TAMBAHKAN FUNGSI BARU INI DI BAGIAN BAWAH FILE ---
+function handleImport() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput.files.length === 0) {
+        tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const tombolImport = document.getElementById('tombolImport');
+    tombolImport.disabled = true;
+    tombolImport.innerHTML = "Memproses...";
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results) {
+            const dataToImport = results.data;
+            if (dataToImport.length > 0) {
+                try {
+                    const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataToImport });
+                    if (error) throw error;
+                    
+                    let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
+                    if (data.gagal > 0) {
+                        pesan += ` ${data.gagal} data gagal (siswa/topik tidak ditemukan).`;
+                        tampilkanNotifikasi(pesan, 'warning');
+                        console.warn('Item Gagal:', data.item_gagal);
+                    } else {
+                        tampilkanNotifikasi(pesan, 'success');
+                    }
+                    muatRiwayatNilai(); // Refresh riwayat untuk menampilkan data baru
+                } catch(e) {
+                    tampilkanNotifikasi('Error saat impor: ' + e.message, 'error');
+                } finally {
+                    tombolImport.disabled = false;
+                    tombolImport.innerHTML = "Import & Simpan Nilai";
+                    fileInput.value = ''; // Reset input file
+                }
+            } else {
+                tampilkanNotifikasi('File CSV kosong atau formatnya salah.', 'error');
+                tombolImport.disabled = false;
+                tombolImport.innerHTML = "Import & Simpan Nilai";
+            }
+        },
+        error: function(err) {
+            tampilkanNotifikasi('Gagal membaca file CSV: ' + err.message, 'error');
+            tombolImport.disabled = false;
+            tombolImport.innerHTML = "Import & Simpan Nilai";
+        }
+    });
 }
