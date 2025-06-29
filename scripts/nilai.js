@@ -254,8 +254,7 @@ function tampilkanNotifikasi(message, type) {
 
 // --- FUNGSI BARU UNTUK IMPORT CSV ---
 // GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
-// GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
-async function handleImport() {
+function handleImport() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) {
         tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
@@ -270,17 +269,31 @@ async function handleImport() {
     Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
+        // Tambahkan transformHeader untuk membersihkan nama kolom dari karakter aneh
+        transformHeader: function(header) {
+            return header.trim();
+        },
         complete: async function(results) {
             
-            // --- INI DIA FILTER ANTI SAMPAH-NYA ---
+            // --- INI DIA FILTER DAN PEMBERSIHAN DATA PAMUNGKAS ---
             const dataBersih = results.data.filter(row => 
-                row.Nama_Lengkap && row.Nama_Lengkap.trim() !== ''
-            );
-            // -----------------------------------------
+                row.Nama_Lengkap && typeof row.Nama_Lengkap === 'string' && row.Nama_Lengkap.trim() !== ''
+            ).map(row => {
+                // Buang semua spasi ekstra di setiap data sebelum dikirim
+                return {
+                    Nama_Lengkap: row.Nama_Lengkap.trim(),
+                    Kelas: row.Kelas.trim(),
+                    Topik_Bahasan: row.Topik_Bahasan.trim(),
+                    Aspek_Yang_Dinilai: row.Aspek_Yang_Dinilai.trim(),
+                    Nilai_Skor: row.Nilai_Skor.trim(),
+                    Umpan_Balik_Siswa: row.Umpan_Balik_Siswa ? row.Umpan_Balik_Siswa.trim() : ''
+                };
+            });
+            // --------------------------------------------------------
             
-            console.log("Data setelah dibersihkan:", dataBersih);
+            console.log("Data bersih yang akan dikirim ke Supabase:", dataBersih);
 
-            if (!dataBersih || dataBersih.length === 0) {
+            if (dataBersih.length === 0) {
                 tampilkanNotifikasi('File CSV tidak berisi data yang valid.', 'error');
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
@@ -288,23 +301,21 @@ async function handleImport() {
                 return;
             }
 
-            tampilkanNotifikasi(`Membaca ${dataBersih.length} baris data valid. Mencoba mengimpor...`, 'success');
+            tampilkanNotifikasi(`Membaca ${dataBersih.length} baris data valid. Mengimpor...`, 'success');
 
             try {
-                // Panggil fungsi SQL di Supabase dengan data yang sudah bersih
                 const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataBersih });
-
                 if (error) throw error;
                 
                 let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
                 if (data.gagal > 0) {
-                    pesan += ` ${data.gagal} data gagal (nama/kelas/topik tidak cocok).`;
+                    pesan += ` ${data.gagal} data gagal.`;
                     tampilkanNotifikasi(pesan, 'warning');
-                    console.warn('Item Gagal:', data.item_gagal);
+                    console.warn('Item Gagal (data dari CSV):', data.item_gagal);
                 } else {
                     tampilkanNotifikasi(pesan, 'success');
                 }
-                muatRiwayatNilai(true); // Refresh riwayat
+                muatRiwayatNilai(true);
 
             } catch(e) {
                 tampilkanNotifikasi('Error saat impor ke database: ' + e.message, 'error');
