@@ -254,7 +254,7 @@ function tampilkanNotifikasi(message, type) {
 
 // --- FUNGSI BARU UNTUK IMPORT CSV ---
 // GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
-async function handleImport() {
+function handleImport() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) {
         tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
@@ -268,37 +268,35 @@ async function handleImport() {
 
     // Gunakan PapaParse untuk membaca file CSV
     Papa.parse(file, {
-        header: true, // PENTING: Anggap baris pertama adalah header
+        header: true,
         skipEmptyLines: true,
         complete: async function(results) {
-            const dataDariCsv = results.data;
-            console.log("Data setelah di-parse oleh PapaParse:", dataDariCsv); // CCTV #1
+            const dataToImport = results.data;
+            console.log("Data setelah di-parse oleh PapaParse:", dataToImport); // CCTV untuk lihat hasil parse
 
-            if (!dataDariCsv || dataDariCsv.length === 0) {
+            if (!dataToImport || dataToImport.length === 0) {
                 tampilkanNotifikasi('File CSV kosong atau formatnya salah.', 'error');
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
                 return;
             }
 
-            // Pastikan semua kolom yang dibutuhkan ada
-            const barisPertama = dataDariCsv[0];
+            // Pastikan format header benar
+            const barisPertama = dataToImport[0];
             if (!('Nama_Lengkap' in barisPertama && 'Kelas' in barisPertama && 'Topik_Bahasan' in barisPertama && 'Nilai_Skor' in barisPertama)) {
-                tampilkanNotifikasi('Format CSV salah! Pastikan ada kolom: Nama_Lengkap, Kelas, Topik_Bahasan, Nilai_Skor.', 'error');
+                tampilkanNotifikasi('Format kolom CSV salah!', 'error');
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
                 return;
             }
 
-            tampilkanNotifikasi(`Mencoba mengimpor ${dataDariCsv.length} data...`, 'success');
+            tampilkanNotifikasi(`Mencoba mengimpor ${dataToImport.length} data...`, 'success');
 
             try {
-                // Kirim data ke fungsi SQL di Supabase
-                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataDariCsv });
-
-                if (error) throw error; // Lemparkan error jika ada
+                // Panggil fungsi SQL 'import_nilai_massal' di Supabase
+                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataToImport });
+                if (error) throw error;
                 
-                // Proses hasil dari Supabase
                 let pesan = `Proses impor selesai! ${data.sukses} data berhasil disimpan.`;
                 if (data.gagal > 0) {
                     pesan += ` ${data.gagal} data gagal (nama/kelas/topik tidak cocok).`;
@@ -308,9 +306,7 @@ async function handleImport() {
                     tampilkanNotifikasi(pesan, 'success');
                 }
                 muatRiwayatNilai(true); // Refresh riwayat untuk menampilkan data baru
-
             } catch(e) {
-                console.error("Error saat memanggil RPC Supabase:", e); // CCTV #2
                 tampilkanNotifikasi('Error saat impor: ' + e.message, 'error');
             } finally {
                 tombolImport.disabled = false;
