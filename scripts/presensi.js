@@ -134,6 +134,7 @@ function handlePaginasi(e) {
     }
 }
 
+// Ganti fungsi handleSimpanPresensi yang lama dengan ini
 async function handleSimpanPresensi() {
     const btn = document.getElementById('simpanPresensiBtn');
     btn.disabled = true;
@@ -157,14 +158,22 @@ async function handleSimpanPresensi() {
 
     try {
         if (dataUntukDisimpan.length > 0) {
-            const { error } = await supa.from('Presensi').insert(dataUntukDisimpan);
+            // GANTI .insert() MENJADI .upsert() YANG LEBIH CANGGIH
+            const { error } = await supa
+                .from('Presensi')
+                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' });
+
             if (error) throw error;
         }
         tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
-        document.getElementById('daftarSiswaContainer').innerHTML = '<p class="text-center text-green-600 font-semibold">Presensi sudah disimpan.</p>';
+        
+        // Reset tampilan setelah berhasil
+        siswaKelasCache = []; 
+        document.getElementById('daftarSiswaContainer').innerHTML = '<p class="text-center text-green-600 font-semibold">Presensi sudah disimpan. Silakan pilih kelas atau tanggal lain.</p>';
         btn.classList.add('hidden');
         const paginationControls = document.getElementById('paginationControlsPresensi');
         if(paginationControls) paginationControls.innerHTML = '';
+
     } catch (error) {
         tampilkanNotifikasi('Error: ' + error.message, 'error');
     } finally {
