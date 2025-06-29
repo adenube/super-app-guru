@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_top">
+    <title>Manajemen Nilai - SuperApp Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .radio-item label { display: flex; align-items: center; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 2px solid #e5e7eb; }
+        .radio-item input[type="radio"] { position: absolute; opacity: 0; }
+        .radio-item input[type="radio"]:checked + label { border-color: #3b82f6; background-color: #eff6ff; }
+        .radio-item label::before { content: ''; width: 18px; height: 18px; border-radius: 50%; margin-right: 8px; border: 2px solid #d1d5db; }
+        .radio-item input[type="radio"]:checked + label::before { border: 5px solid #3b82f6; background-color: white; }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <div><a href="index.html" class="flex items-center py-5 px-2 text-gray-700 hover:text-gray-900"><span class="font-bold">SuperApp Guru</span></a></div>
+            <div class="hidden md:flex items-center space-x-1">
+                <a href="index.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Manajemen Siswa</a>
+                <a href="dashboard.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Dashboard</a>
+                <a href="presensi.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Presensi</a>
+                <a href="rencana-ajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Rencana Ajar</a>
+                <a href="nilai.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Nilai</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        <h1 class="text-3xl font-bold text-blue-800 mb-8">Manajemen Penilaian Siswa</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2">Form Penilaian Karakter/Sikap</h2>
+                <form id="formNilai" class="space-y-4">
+                    <input type="hidden" id="ID_Nilai">
+                    <div><label for="filterKelas" class="block text-sm font-medium text-gray-700">Filter Kelas</label><select id="filterKelas" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Kelas</option></select></div>
+                    <div><label for="pilihSiswa" class="block text-sm font-medium text-gray-700">Siswa</label><select id="pilihSiswa" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Siswa</option></select></div>
+                    <div><label for="pilihTopik" class="block text-sm font-medium text-gray-700">Topik/Kegiatan Penilaian</label><select id="pilihTopik" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Pilih Topik</option></select></div>
+                     <div><label for="aspekDinilai" class="block text-sm font-medium text-gray-700">Aspek yang Dinilai</label><input type="text" id="aspekDinilai" required placeholder="Contoh: Kerjasama, Inisiatif" class="w-full mt-1 p-2 border rounded-md"></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nilai Deskriptif</label>
+                        <div class="flex flex-wrap gap-4"><div class="radio-item"><input type="radio" id="nilai_sb" name="nilaiDeskriptif" value="Sangat Baik" required><label for="nilai_sb">Sangat Baik</label></div><div class="radio-item"><input type="radio" id="nilai_b" name="nilaiDeskriptif" value="Baik"><label for="nilai_b">Baik</label></div><div class="radio-item"><input type="radio" id="nilai_c" name="nilaiDeskriptif" value="Cukup"><label for="nilai_c">Cukup</label></div></div>
+                    </div>
+                     <div><label for="umpanBalik" class="block text-sm font-medium text-gray-700">Umpan Balik / Motivasi</label><textarea id="umpanBalik" rows="4" placeholder="Tulis kata-kata penyemangat untuk siswa..." class="w-full mt-1 p-2 border rounded-md"></textarea></div>
+                    <button type="submit" id="tombolSimpanNilai" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Simpan Nilai</button>
+                </form>
+            </div>
+            <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-semibold text-blue-700">Riwayat Penilaian Karakter</h2><button id="downloadRiwayatBtn" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-3 rounded-md text-sm flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>Download</button></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label for="filterKelasRiwayat" class="block text-sm font-medium text-gray-700">Filter Kelas:</label><select id="filterKelasRiwayat" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Semua Kelas</option></select></div>
+                    <div><label for="filterTopikRiwayat" class="block text-sm font-medium text-gray-700">Filter Topik:</label><select id="filterTopikRiwayat" class="w-full mt-1 p-2 border border-gray-300 rounded-md"><option value="">Semua Topik</option></select></div>
+                </div>
+                <div id="riwayatNilaiContainer" class="space-y-3"></div>
+                <div id="riwayatPaginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
+            </div>
+        </div>
+    </div>
+    <script src="scripts/nilai.js"></script>
+</body>
+</html>
