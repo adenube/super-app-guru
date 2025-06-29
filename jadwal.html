@@ -2,12 +2,25 @@
 <html lang="id">
 <head>
     <base target="_top">
-    <title>Atur Jadwal - SuperApp Guru</title>
+    <title>Jadwal Mengajar - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .schedule-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .schedule-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .schedule-card.is-past {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100">
@@ -23,69 +36,34 @@
                 <a href="rencana-ajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Rencana Ajar</a>
                 <a href="nilai.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Nilai</a>
                 <a href="jurnal-mengajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Jurnal</a>
-				<a href="jadwal.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Jadwal</a>
+                <a href="jadwal.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Jadwal</a>
             </div>
           </div>
         </div>
       </div>
     </nav>
 
-    <div class="max-w-4xl mx-auto py-8 px-4">
-        <h1 class="text-3xl font-bold text-blue-800 mb-8">Atur Jadwal Mengajar Mingguan</h1>
-
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 id="form-title" class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Tambah Jadwal Baru</h2>
-            <form id="formJadwal" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <input type="hidden" id="jadwal-id">
-                <div>
-                    <label for="jadwal-hari" class="block text-sm font-medium text-gray-700">Hari</label>
-                    <select id="jadwal-hari" required class="w-full mt-1 p-2 border rounded-md">
-                        <option>Senin</option><option>Selasa</option><option>Rabu</option>
-                        <option>Kamis</option><option>Jumat</option><option>Sabtu</option>
-                    </select>
-                </div>
-                 <div>
-                    <label for="jadwal-mapel" class="block text-sm font-medium text-gray-700">Mata Pelajaran</label>
-                    <input type="text" id="jadwal-mapel" required class="w-full mt-1 p-2 border rounded-md">
-                </div>
-                <div>
-                    <label for="jadwal-kelas" class="block text-sm font-medium text-gray-700">Kelas</label>
-                    <input type="text" id="jadwal-kelas" required class="w-full mt-1 p-2 border rounded-md">
-                </div>
-                <div>
-                    <label for="jadwal-jam-mulai" class="block text-sm font-medium text-gray-700">Jam Mulai</label>
-                    <input type="time" id="jadwal-jam-mulai" required class="w-full mt-1 p-2 border rounded-md">
-                </div>
-                <div>
-                    <label for="jadwal-jam-selesai" class="block text-sm font-medium text-gray-700">Jam Selesai</label>
-                    <input type="time" id="jadwal-jam-selesai" required class="w-full mt-1 p-2 border rounded-md">
-                </div>
-                <div class="flex gap-2">
-                     <button type="submit" id="tombolSimpan" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan</button>
-                     <button type="button" id="tombolBatal" class="w-full hidden bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Daftar Jadwal Tersimpan</h2>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Hari</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Waktu</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Mata Pelajaran</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th>
-                            <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="jadwal-table-body">
-                        </tbody>
-                </table>
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <div class="flex justify-between items-center mb-8">
+            <div id="header-container">
+                <h1 id="headerHari" class="text-3xl font-bold text-gray-800"></h1>
+                <p id="headerTanggal" class="text-lg text-gray-500 mt-1"></p>
             </div>
+            <button id="tombolTambahJadwal" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+                + Atur Jadwal Mingguan
+            </button>
         </div>
+
+        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 id="form-title" class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2"></h2>
+            <form id="formJadwal" class="space-y-4">
+                </form>
+        </div>
+
+        <div id="jadwal-harian-container" class="space-y-6">
+            </div>
     </div>
+
     <script src="scripts/jadwal.js"></script>
 </body>
 </html>
