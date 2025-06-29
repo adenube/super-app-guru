@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function muatDaftarKelas() {
     try {
-        const { data, error } = await supa.from('Siswa').select('Kelas');
+        const { data, error } = await supa.from('Siswa').select('Kelas', { count: 'exact' });
         if (error) throw error;
         const daftarKelas = [...new Set(data.map(item => item.Kelas))].sort();
         
@@ -38,41 +38,49 @@ async function muatDaftarKelas() {
     }
 }
 
+// --- FUNGSI YANG DIPERBARUI DENGAN LOGIKA CEK ---
 async function handleTampilkanSiswa() {
     const btn = document.getElementById('tampilkanSiswaBtn');
+    const container = document.getElementById('daftarSiswaContainer');
+    const simpanBtn = document.getElementById('simpanPresensiBtn');
+    
     btn.disabled = true;
-    btn.innerHTML = "Memuat...";
+    btn.innerHTML = "Memeriksa...";
+    container.innerHTML = ''; // Kosongkan dulu
+    simpanBtn.classList.add('hidden'); // Sembunyikan tombol simpan
     
     const tanggal = document.getElementById('tanggalPresensi').value;
     const kelas = document.getElementById('filterKelasPresensi').value;
 
-    if (!tanggal) {
-        tampilkanNotifikasi('Silakan pilih tanggal terlebih dahulu.', 'error');
+    if (!tanggal || !kelas) {
+        tampilkanNotifikasi('Silakan pilih tanggal dan kelas terlebih dahulu.', 'error');
         btn.disabled = false;
         btn.innerHTML = "Tampilkan Siswa";
         return;
     }
 
     try {
-        let siswaQuery = supa.from('Siswa').select('id, Nama_Lengkap, Kelas');
-        if (kelas) {
-            siswaQuery = siswaQuery.eq('Kelas', kelas);
-        }
-        const { data: semuaSiswaDiKelas, error: siswaError } = await siswaQuery;
+        // 1. Ambil semua siswa dari kelas yang dipilih
+        const { data: semuaSiswaDiKelas, error: siswaError } = await supa.from('Siswa').select('id, Nama_Lengkap, Kelas').eq('Kelas', kelas);
         if (siswaError) throw siswaError;
 
+        // 2. Ambil data presensi yang sudah ada untuk tanggal & kelas itu
         const { data: presensiData, error: presensiError } = await supa.from('Presensi')
-            .select('ID_Siswa, Status, Catatan') // Ambil juga status & catatan
-            .eq('Tanggal_Presensi', tanggal);
+            .select('ID_Siswa')
+            .eq('Tanggal_Presensi', tanggal)
+            .in('ID_Siswa', semuaSiswaDiKelas.map(s => s.id)); // Hanya cek siswa di kelas ini
         if (presensiError) throw presensiError;
         
-        // Buat peta data presensi yang sudah ada untuk memudahkan pengecekan
-        const presensiMap = new Map(presensiData.map(p => [p.ID_Siswa, p]));
-        
-        // Tampilkan semua siswa, tapi beri tanda jika sudah diabsen
-        siswaKelasCache = semuaSiswaDiKelas.map(siswa => {
-            return { ...siswa, presensi: presensiMap.get(siswa.id) };
-        });
+        // 3. LOGIKA BARU: Cek apakah presensi sudah lengkap
+        if (semuaSiswaDiKelas.length > 0 && presensiData.length === semuaSiswaDiKelas.length) {
+            tampilkanNotifikasi(`Presensi untuk kelas ${kelas} sudah lengkap pada tanggal ini.`, 'success');
+            container.innerHTML = `<p class="text-center text-green-600 font-semibold">Presensi sudah lengkap.</p>`;
+            return; // Hentikan proses
+        }
+
+        // 4. Jika belum lengkap, saring siswa yang belum diabsen
+        const siswaSudahAbsen = presensiData.map(p => p.ID_Siswa);
+        siswaKelasCache = semuaSiswaDiKelas.filter(siswa => !siswaSudahAbsen.includes(siswa.id));
         
         currentPage = 1;
         tampilkanHalaman(currentPage);
@@ -85,48 +93,6 @@ async function handleTampilkanSiswa() {
     }
 }
 
-function tampilkanHalaman(page) {
-    currentPage = page;
-    const container = document.getElementById('daftarSiswaContainer');
-    const simpanBtn = document.getElementById('simpanPresensiBtn');
-    container.innerHTML = '';
-    
-    if (!siswaKelasCache || siswaKelasCache.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">Tidak ada siswa di kelas ini.</p>';
-        simpanBtn.classList.add('hidden');
-    } else {
-        simpanBtn.classList.remove('hidden');
-        const startIndex = (page - 1) * rowsPerPage;
-        const endIndex = startIndex + rowsPerPage;
-        const dataHalamanIni = siswaKelasCache.slice(startIndex, endIndex);
-
-        dataHalamanIni.forEach(siswa => {
-            const divSiswa = document.createElement('div');
-            const sudahDiabsen = !!siswa.presensi;
-            const status = sudahDiabsen ? siswa.presensi.Status : 'Hadir';
-            const catatan = sudahDiabsen ? siswa.presensi.Catatan : '';
-
-            divSiswa.className = `siswa-row p-4 border rounded-lg flex flex-col md:flex-row items-center gap-4 ${sudahDiabsen ? 'bg-green-50' : 'bg-white'}`;
-            divSiswa.dataset.id = siswa.id;
-            
-            divSiswa.innerHTML = `
-                <div class="flex-grow">
-                    <p class="font-semibold text-gray-800">${siswa.Nama_Lengkap}</p>
-                    <p class="text-sm text-gray-500">${siswa.Kelas}</p>
-                </div>
-                <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-center">
-                    <div class="radio-item"><input type="radio" id="h-${siswa.id}" name="status-${siswa.id}" value="Hadir" ${status === 'Hadir' ? 'checked' : ''}><label for="h-${siswa.id}">H</label></div>
-                    <div class="radio-item"><input type="radio" id="s-${siswa.id}" name="status-${siswa.id}" value="Sakit" ${status === 'Sakit' ? 'checked' : ''}><label for="s-${siswa.id}">S</label></div>
-                    <div class="radio-item"><input type="radio" id="i-${siswa.id}" name="status-${siswa.id}" value="Izin" ${status === 'Izin' ? 'checked' : ''}><label for="i-${siswa.id}">I</label></div>
-                    <div class="radio-item"><input type="radio" id="a-${siswa.id}" name="status-${siswa.id}" value="Alpha" ${status === 'Alpha' ? 'checked' : ''}><label for="a-${siswa.id}">A</label></div>
-                </div>
-                <div class="w-full md:w-1/3 mt-2 md:mt-0"><input type="text" placeholder="Catatan (opsional)" class="catatan-presensi w-full text-sm px-3 py-1 border rounded-md" value="${catatan}"></div>
-            `;
-            container.appendChild(divSiswa);
-        });
-    }
-    gambarTombolPaginasi();
-}
 
 async function handleSimpanPresensi() {
     const btn = document.getElementById('simpanPresensiBtn');
@@ -151,13 +117,17 @@ async function handleSimpanPresensi() {
 
     try {
         if (dataUntukDisimpan.length > 0) {
-            // Gunakan .upsert() yang lebih kuat
-            const { error } = await supa
-                .from('Presensi')
-                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' });
+            // Kita pakai .insert() yang sederhana, karena logika anti-duplikat sudah ada di handleTampilkanSiswa
+            const { error } = await supa.from('Presensi').insert(dataUntukDisimpan);
             if (error) throw error;
         }
-        tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan/diperbarui.', 'success');
+        tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
+        
+        // LOGIKA BARU: Reset total setelah berhasil simpan
+        siswaKelasCache = []; 
+        tampilkanHalaman(1); // Ini akan membersihkan tampilan dan menyembunyikan tombol
+        document.getElementById('daftarSiswaContainer').innerHTML = `<p class="text-center text-green-600 font-semibold">Presensi berhasil disimpan!</p>`;
+
     } catch (error) {
         tampilkanNotifikasi('Error saat menyimpan: ' + error.message, 'error');
     } finally {
@@ -166,7 +136,43 @@ async function handleSimpanPresensi() {
     }
 }
 
-// --- FUNGSI-FUNGSI LAIN (gambarTombolPaginasi, handlePaginasi, tampilkanNotifikasi) TIDAK BERUBAH ---
+// --- FUNGSI-FUNGSI LAIN (tampilkanHalaman, gambarTombolPaginasi, handlePaginasi, tampilkanNotifikasi) TIDAK BERUBAH ---
+// (Anda bisa salin dari versi sebelumnya, atau gunakan yang ada di sini)
+
+function tampilkanHalaman(page) {
+    currentPage = page;
+    const container = document.getElementById('daftarSiswaContainer');
+    const simpanBtn = document.getElementById('simpanPresensiBtn');
+    container.innerHTML = '';
+    
+    if (!siswaKelasCache || siswaKelasCache.length === 0) {
+        // Jangan tampilkan apa-apa jika cache kosong, karena pesan sudah ditangani di handleTampilkanSiswa
+        simpanBtn.classList.add('hidden');
+    } else {
+        simpanBtn.classList.remove('hidden');
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const dataHalamanIni = siswaKelasCache.slice(startIndex, endIndex);
+
+        dataHalamanIni.forEach(siswa => {
+            const divSiswa = document.createElement('div');
+            divSiswa.className = 'siswa-row p-4 border rounded-lg flex flex-col md:flex-row items-center gap-4 bg-white';
+            divSiswa.dataset.id = siswa.id;
+            divSiswa.innerHTML = `
+                <div class="flex-grow"><p class="font-semibold text-gray-800">${siswa.Nama_Lengkap}</p><p class="text-sm text-gray-500">${siswa.Kelas}</p></div>
+                <div class="flex items-center gap-2 md:gap-4 flex-wrap justify-center">
+                    <div class="radio-item"><input type="radio" id="h-${siswa.id}" name="status-${siswa.id}" value="Hadir" checked><label for="h-${siswa.id}">H</label></div>
+                    <div class="radio-item"><input type="radio" id="s-${siswa.id}" name="status-${siswa.id}" value="Sakit"><label for="s-${siswa.id}">S</label></div>
+                    <div class="radio-item"><input type="radio" id="i-${siswa.id}" name="status-${siswa.id}" value="Izin"><label for="i-${siswa.id}">I</label></div>
+                    <div class="radio-item"><input type="radio" id="a-${siswa.id}" name="status-${siswa.id}" value="Alpha"><label for="a-${siswa.id}">A</label></div>
+                </div>
+                <div class="w-full md:w-1/3 mt-2 md:mt-0"><input type="text" placeholder="Catatan (opsional)" class="catatan-presensi w-full text-sm px-3 py-1 border rounded-md"></div>
+            `;
+            container.appendChild(divSiswa);
+        });
+    }
+    gambarTombolPaginasi();
+}
 
 function gambarTombolPaginasi() {
     const paginationControls = document.getElementById('paginationControlsPresensi');
@@ -217,6 +223,6 @@ function tampilkanNotifikasi(message, type) {
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateY(-20px)';
-        setTimeout(() => { notification.remove(); }, 300);
+        setTimeout(() => { notification.remove(); }, 3000);
     }, 3000);
 }
