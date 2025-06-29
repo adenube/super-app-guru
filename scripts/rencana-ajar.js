@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('formRpp').addEventListener('submit', handleSimpanRpp);
     document.getElementById('tombolTambahBaru').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tombolBatal').addEventListener('click', resetFormRpp);
+	
+	// Pasang listener untuk drop zone
+    document.querySelectorAll('.drop-zone').forEach(setupDropZone);
 });
 
 async function muatSemuaRpp() {
@@ -66,11 +69,15 @@ function buatKartuRpp(rppData) {
             <button class="hapus-rpp-btn text-xs text-red-600 hover:underline" data-id="${rppData.id}">Hapus</button>
         </div>
     `;
-    // Pasang listener langsung ke kartu yang baru dibuat
-    div.addEventListener('dragstart', handleDragStart);
-    div.addEventListener('dragend', handleDragEnd);
-    div.querySelector('.edit-rpp-btn').addEventListener('click', handleAksiKartu);
-    div.querySelector('.hapus-rpp-btn').addEventListener('click', handleAksiKartu);
+    // Pasang listener untuk tombol edit dan hapus
+    div.querySelector('.edit-rpp-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); // Hentikan event agar tidak menyebar
+        isiFormUntukEdit(e.target.dataset.id);
+    });
+    div.querySelector('.hapus-rpp-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); // Hentikan event agar tidak menyebar
+        handleHapusRpp(e.target.dataset.id);
+    });
     return div;
 }
 
@@ -82,11 +89,13 @@ function handleDragStart(e) {
 }
 
 function handleDragEnd(e) {
-    kartuYangDiDrag.classList.remove('dragging');
+    if (kartuYangDiDrag) {
+        kartuYangDiDrag.classList.remove('dragging');
+    }
     kartuYangDiDrag = null;
 }
 
-document.querySelectorAll('.drop-zone').forEach(zone => {
+function setupDropZone(zone) {
     zone.addEventListener('dragover', e => {
         e.preventDefault();
         zone.classList.add('drag-over-zone');
@@ -94,25 +103,30 @@ document.querySelectorAll('.drop-zone').forEach(zone => {
     zone.addEventListener('dragleave', e => {
         zone.classList.remove('drag-over-zone');
     });
-    zone.addEventListener('drop', async e => {
+    zone.addEventListener('drop', async (e) => {
         e.preventDefault();
         zone.classList.remove('drag-over-zone');
-        if (kartuYangDiDrag) {
+
+        // Gunakan referensi dari 'kartuYangDiDrag', bukan mencari ulang
+        if (kartuYangDiDrag && e.currentTarget === zone) {
             zone.appendChild(kartuYangDiDrag);
-            const statusBaru = zone.parentElement.id.replace('kolom-', '');
+            const statusBaru = zone.id.replace('kolom-', '');
+            const idKartu = kartuYangDiDrag.id;
+            
             try {
-                const { error } = await supa.from('RencanaAjar').update({ Status_Kanban: statusBaru }).eq('id', kartuYangDiDrag.id);
+                const { error } = await supa.from('RencanaAjar').update({ Status_Kanban: statusBaru }).eq('id', idKartu);
                 if (error) throw error;
+                
                 tampilkanNotifikasi(`Status diubah menjadi "${statusBaru}"`, 'success');
-                const index = semuaRppCache.findIndex(rpp => rpp.id === kartuYangDiDrag.id);
-                if (index > -1) semuaRppCache[index].Status_Kanban = statusBaru;
+                const index = semuaRppCache.findIndex(rpp => rpp.id === idKartu);
+                if(index > -1) semuaRppCache[index].Status_Kanban = statusBaru;
             } catch (error) {
                 tampilkanNotifikasi("Gagal update status: " + error.message, 'error');
                 muatSemuaRpp(); // Kembalikan ke posisi semula jika gagal
             }
         }
     });
-});
+}
 
 
 // --- FUNGSI-FUNGSI UNTUK FORM & AKSI KARTU ---
