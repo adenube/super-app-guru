@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rencana Ajar - SuperApp Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .kanban-card { transition: all 0.2s ease-in-out; cursor: grab; }
+        .kanban-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .kanban-card:active { cursor: grabbing; }
+        .dragging { opacity: 0.5; transform: scale(1.05); }
+        .drag-over-zone { border-style: dashed; border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <div><a href="index.html" class="flex items-center py-5 px-2 text-gray-700 hover:text-gray-900"><span class="font-bold">SuperApp Guru</span></a></div>
+            <div class="hidden md:flex items-center space-x-1">
+                <a href="index.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Manajemen Siswa</a>
+                <a href="dashboard.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Dashboard</a>
+                <a href="presensi.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Presensi</a>
+                <a href="rencana-ajar.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Rencana Ajar</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-800">Manajemen Rencana Ajar</h1>
+            <button id="tombolTambahBaru" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition transform hover:scale-105">
+                + Rencana Baru
+            </button>
+        </div>
+        
+        <div id="form-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formRppTitle">Form Tambah Rencana Ajar Baru</h2>
+            <form id="formRpp" class="space-y-4">
+                <input type="hidden" id="ID_Topik">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="Mata_Pelajaran" class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label><input type="text" id="Mata_Pelajaran" required class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                    <div><label for="Topik_Bahasan" class="block text-sm font-medium text-gray-700 mb-1">Topik Bahasan</label><input type="text" id="Topik_Bahasan" required class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                </div>
+                <div><label for="Ringkasan_Materi" class="block text-sm font-medium text-gray-700 mb-1">Ringkasan Materi / Tujuan</label><textarea id="Ringkasan_Materi" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea></div>
+                <div><label for="Pendekatan_Mengajar" class="block text-sm font-medium text-gray-700 mb-1">Pendekatan Mengajar</label><input type="text" id="Pendekatan_Mengajar" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
+                <div><label for="Link_Materi_Ajar" class="block text-sm font-medium text-gray-700 mb-1">Link Materi Ajar (Opsional)</label><input type="url" id="Link_Materi_Ajar" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="https://..."></div>
+                <div class="flex justify-end gap-4 pt-2">
+                    <button type="button" id="tombolBatal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button>
+                    <button type="submit" id="tombolSimpanRpp" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan Rencana</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-200 rounded-lg p-4"><h3 class="font-semibold text-lg mb-4 text-gray-700">Rencana (To-Do)</h3><div id="kolom-Belum Dikerjakan" class="drop-zone space-y-3 min-h-[200px]"></div></div>
+            <div class="bg-yellow-100 rounded-lg p-4"><h3 class="font-semibold text-lg mb-4 text-yellow-800">Dikerjakan (In-Progress)</h3><div id="kolom-Sedang Dikerjakan" class="drop-zone space-y-3 min-h-[200px]"></div></div>
+            <div class="bg-green-100 rounded-lg p-4"><h3 class="font-semibold text-lg mb-4 text-green-800">Selesai (Done)</h3><div id="kolom-Selesai" class="drop-zone space-y-3 min-h-[200px]"></div></div>
+        </div>
+    </div>
+    
+    <script src="scripts/rencana-ajar.js"></script>
+</body>
+</html>
