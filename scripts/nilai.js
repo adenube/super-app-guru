@@ -4,7 +4,7 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let riwayatNilaiCache = [];
 let riwayatCurrentPage = 1;
-const riwayatRowsPerPage = 5;
+const riwayatRowsPerPage = 3;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDropdowns();
@@ -106,21 +106,50 @@ async function handleSimpanNilai(e) {
     }
 }
 
+// GANTI FUNGSI muatRiwayatNilai YANG LAMA DENGAN VERSI BARU INI
 async function muatRiwayatNilai(dariFilter = false) {
     const container = document.getElementById('riwayatNilaiContainer');
     const kelasTerpilih = document.getElementById('filterKelasRiwayat').value;
     container.innerHTML = '<p class="text-center text-gray-500">Memuat riwayat...</p>';
-    if (dariFilter) riwayatCurrentPage = 1;
+    
+    if (dariFilter) {
+        riwayatCurrentPage = 1; // Jika dipicu oleh filter, selalu kembali ke halaman 1
+    }
 
     try {
+        // Kita bangun query-nya langkah demi langkah
         let query = supa.from('Nilai')
-            .select(`id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa, Siswa ( Nama_Lengkap, Kelas )`, { count: 'exact' })
+            .select(`
+                id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa,
+                Siswa ( Nama_Lengkap, Kelas )
+            `, { count: 'exact' })
             .eq('Jenis_Nilai', 'Karakter')
-            .order('Tanggal_Penilaian', { ascending: false, foreignTable: '' })
+            .order('Tanggal_Penilaian', { ascending: false })
             .order('created_at', { ascending: false });
 
+        // INI BAGIAN PERBAIKANNYA:
+        // Kita tidak bisa memfilter di tabel 'Siswa' secara langsung seperti kemarin.
+        // Cara yang benar adalah dengan mengambil dulu ID siswa dari kelas yang dipilih.
         if (kelasTerpilih) {
-            query = query.filter('Siswa.Kelas', 'eq', kelasTerpilih);
+            // 1. Ambil dulu semua ID siswa yang ada di kelas yang dipilih
+            const { data: siswaDiKelas, error: siswaError } = await supa
+                .from('Siswa')
+                .select('id')
+                .eq('Kelas', kelasTerpilih);
+            
+            if (siswaError) throw siswaError;
+
+            const idSiswaDiKelas = siswaDiKelas.map(s => s.id);
+
+            // 2. Jika tidak ada siswa di kelas itu, tampilkan pesan kosong
+            if (idSiswaDiKelas.length === 0) {
+                 riwayatNilaiCache = [];
+                 gambarRiwayat(0);
+                 return;
+            }
+
+            // 3. Baru kita filter tabel Nilai berdasarkan daftar ID siswa tersebut
+            query = query.in('ID_Siswa', idSiswaDiKelas);
         }
         
         const startIndex = (riwayatCurrentPage - 1) * riwayatRowsPerPage;
@@ -128,9 +157,9 @@ async function muatRiwayatNilai(dariFilter = false) {
 
         const { data, error, count } = await query;
         if (error) throw error;
-        
+
         riwayatNilaiCache = data;
-        gambarRiwayat(count);
+        gambarRiwayat(count); // Kirim total data ke fungsi gambar
 
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat riwayat: ' + error.message, 'error');
