@@ -8,17 +8,12 @@ const riwayatRowsPerPage = 3;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadDropdowns();
-    document.getElementById('formNilai').addEventListener('submit', handleSimpanNilai);
     document.getElementById('filterKelas').addEventListener('change', handleFilterKelasForm);
-    
-    // Listener untuk filter riwayat
+    document.getElementById('formNilai').addEventListener('submit', handleSimpanNilai);
     document.getElementById('filterKelasRiwayat').addEventListener('change', () => muatRiwayatNilai(true));
     document.getElementById('filterTopikRiwayat').addEventListener('change', () => muatRiwayatNilai(true));
-    
-    // Listener untuk paginasi dan download
     document.getElementById('riwayatPaginationControls').addEventListener('click', handleRiwayatPaginasi);
     document.getElementById('downloadRiwayatBtn').addEventListener('click', handleDownload);
-
     muatRiwayatNilai();
 });
 
@@ -30,105 +25,56 @@ async function loadDropdowns() {
         ]);
 
         if (kelasResult.error) throw kelasResult.error;
-        const daftarKelas = [...new Set(kelasResult.data.map(item => item.Kelas))];
+        const daftarKelas = [...new Set(kelasResult.data.map(item => item.Kelas))].sort();
         const filterDropdownForm = document.getElementById('filterKelas');
         const filterDropdownRiwayat = document.getElementById('filterKelasRiwayat');
-        // ... (logika isi dropdown kelas sama)
+        filterDropdownForm.innerHTML = '<option value="">Pilih Kelas</option>';
+        filterDropdownRiwayat.innerHTML = '<option value="">Semua Kelas</option>';
+        daftarKelas.forEach(kelas => {
+            if (kelas) {
+                filterDropdownForm.innerHTML += `<option value="${kelas}">${kelas}</option>`;
+                filterDropdownRiwayat.innerHTML += `<option value="${kelas}">${kelas}</option>`;
+            }
+        });
 
         if (topikResult.error) throw topikResult.error;
         const topikData = topikResult.data;
         const topikSelectForm = document.getElementById('pilihTopik');
         const topikSelectRiwayat = document.getElementById('filterTopikRiwayat');
-        // ... (logika isi dropdown topik sama untuk form dan riwayat)
-
+        topikSelectForm.innerHTML = '<option value="">Pilih Topik/Kegiatan</option>';
+        topikSelectRiwayat.innerHTML = '<option value="">Semua Topik</option>';
+        if (topikData && topikData.length > 0) {
+            topikData.forEach(topik => {
+                topikSelectForm.innerHTML += `<option value="${topik.id}">${topik.Topik_Bahasan}</option>`;
+                topikSelectRiwayat.innerHTML += `<option value="${topik.id}">${topik.Topik_Bahasan}</option>`;
+            });
+        } else {
+            topikSelectForm.innerHTML += '<option value="" disabled>Buat Rencana Ajar dahulu</option>';
+        }
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat data dropdown: ' + error.message, 'error');
     }
 }
 
-// --- FUNGSI RIWAYAT YANG DI-UPGRADE DENGAN FILTER GANDA ---
-async function muatRiwayatNilai(dariFilter = false) {
-    const container = document.getElementById('riwayatNilaiContainer');
-    const kelasTerpilih = document.getElementById('filterKelasRiwayat').value;
-    const topikTerpilih = document.getElementById('filterTopikRiwayat').value; // Filter baru
-    container.innerHTML = '<p class="text-center text-gray-500">Memuat riwayat...</p>';
-    if (dariFilter) riwayatCurrentPage = 1;
-
-    try {
-        let query = supa.from('Nilai')
-            .select(`id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa, Siswa ( Nama_Lengkap, Kelas )`, { count: 'exact' })
-            .eq('Jenis_Nilai', 'Karakter');
-
-        // Terapkan filter topik jika ada
-        if (topikTerpilih) {
-            query = query.eq('ID_Topik', topikTerpilih);
-        }
-        
-        // Terapkan filter kelas jika ada (setelah filter topik)
-        if (kelasTerpilih) {
-            // Ini cara yang lebih baik untuk filter relasi
-            const { data: siswaIds, error } = await supa.from('Siswa').select('id').eq('Kelas', kelasTerpilih);
-            if (error) throw error;
-            query = query.in('ID_Siswa', siswaIds.map(s => s.id));
-        }
-
-        query = query.order('Tanggal_Penilaian', { ascending: false }).order('created_at', { ascending: false });
-        const startIndex = (riwayatCurrentPage - 1) * riwayatRowsPerPage;
-        query = query.range(startIndex, startIndex + riwayatRowsPerPage - 1);
-
-        const { data, error, count } = await query;
-        if (error) throw error;
-        
-        riwayatNilaiCache = data;
-        gambarRiwayat(count);
-
-    } catch (error) {
-        tampilkanNotifikasi('Gagal memuat riwayat: ' + error.message, 'error');
-        container.innerHTML = '<p class="text-center text-red-500">Gagal memuat riwayat.</p>';
-    }
-}
-
-// --- FUNGSI BARU UNTUK DOWNLOAD CSV ---
-function handleDownload() {
-    tampilkanNotifikasi('Mempersiapkan data unduhan...', 'success');
-    // Ambil data yang sedang ditampilkan di cache
-    const dataToExport = riwayatNilaiCache.map(nilai => {
-        return {
-            Tanggal: new Date(nilai.Tanggal_Penilaian).toLocaleDateString('id-ID'),
-            Nama_Siswa: nilai.Siswa.Nama_Lengkap,
-            Kelas: nilai.Siswa.Kelas,
-            Aspek_Dinilai: nilai.Aspek_Yang_Dinilai,
-            Nilai: nilai.Nilai_Deskriptif,
-            Umpan_Balik: `"${nilai.Umpan_Balik_Siswa || ''}"` // Bungkus dengan kutip untuk menangani koma
-        };
-    });
-
-    if (dataToExport.length === 0) {
-        tampilkanNotifikasi('Tidak ada data untuk di-download.', 'warning');
+async function handleFilterKelasForm() {
+    const kelasTerpilih = document.getElementById('filterKelas').value;
+    const siswaDropdown = document.getElementById('pilihSiswa');
+    siswaDropdown.innerHTML = '<option value="">Memuat siswa...</option>';
+    if (!kelasTerpilih) {
+        siswaDropdown.innerHTML = '<option value="">Pilih Kelas Dulu</option>';
         return;
     }
-
-    // Ubah data menjadi format CSV
-    const headers = Object.keys(dataToExport[0]);
-    const csvContent = [
-        headers.join(','),
-        ...dataToExport.map(row => headers.map(header => row[header]).join(','))
-    ].join('\n');
-
-    // Buat link download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `laporan_nilai_karakter.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const { data, error } = await supa.from('Siswa').select('id, Nama_Lengkap').eq('Kelas', kelasTerpilih).order('Nama_Lengkap');
+        if (error) throw error;
+        siswaDropdown.innerHTML = '<option value="">Pilih Siswa</option>';
+        data.forEach(siswa => {
+            siswaDropdown.innerHTML += `<option value="${siswa.id}">${siswa.Nama_Lengkap}</option>`;
+        });
+    } catch (error) {
+        tampilkanNotifikasi('Gagal memuat daftar siswa: ' + error.message, 'error');
+    }
 }
-
-// --- FUNGSI-FUNGSI LAINNYA TIDAK BERUBAH ---
-// (handleFilterKelasForm, handleSimpanNilai, gambarRiwayat, gambarRiwayatPaginasi, handleRiwayatPaginasi, tampilkanNotifikasi)
 
 async function handleSimpanNilai(e) {
     e.preventDefault();
@@ -168,61 +114,34 @@ async function handleSimpanNilai(e) {
     }
 }
 
-// GANTI FUNGSI muatRiwayatNilai YANG LAMA DENGAN VERSI BARU INI
 async function muatRiwayatNilai(dariFilter = false) {
     const container = document.getElementById('riwayatNilaiContainer');
     const kelasTerpilih = document.getElementById('filterKelasRiwayat').value;
+    const topikTerpilih = document.getElementById('filterTopikRiwayat').value;
     container.innerHTML = '<p class="text-center text-gray-500">Memuat riwayat...</p>';
-    
-    if (dariFilter) {
-        riwayatCurrentPage = 1; // Jika dipicu oleh filter, selalu kembali ke halaman 1
-    }
+    if (dariFilter) riwayatCurrentPage = 1;
 
     try {
-        // Kita bangun query-nya langkah demi langkah
         let query = supa.from('Nilai')
-            .select(`
-                id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa,
-                Siswa ( Nama_Lengkap, Kelas )
-            `, { count: 'exact' })
-            .eq('Jenis_Nilai', 'Karakter')
-            .order('Tanggal_Penilaian', { ascending: false })
-            .order('created_at', { ascending: false });
-
-        // INI BAGIAN PERBAIKANNYA:
-        // Kita tidak bisa memfilter di tabel 'Siswa' secara langsung seperti kemarin.
-        // Cara yang benar adalah dengan mengambil dulu ID siswa dari kelas yang dipilih.
+            .select(`id, Tanggal_Penilaian, Aspek_Yang_Dinilai, Nilai_Deskriptif, Umpan_Balik_Siswa, Siswa!inner(Nama_Lengkap, Kelas)`, { count: 'exact' })
+            .eq('Jenis_Nilai', 'Karakter');
+        
         if (kelasTerpilih) {
-            // 1. Ambil dulu semua ID siswa yang ada di kelas yang dipilih
-            const { data: siswaDiKelas, error: siswaError } = await supa
-                .from('Siswa')
-                .select('id')
-                .eq('Kelas', kelasTerpilih);
-            
-            if (siswaError) throw siswaError;
-
-            const idSiswaDiKelas = siswaDiKelas.map(s => s.id);
-
-            // 2. Jika tidak ada siswa di kelas itu, tampilkan pesan kosong
-            if (idSiswaDiKelas.length === 0) {
-                 riwayatNilaiCache = [];
-                 gambarRiwayat(0);
-                 return;
-            }
-
-            // 3. Baru kita filter tabel Nilai berdasarkan daftar ID siswa tersebut
-            query = query.in('ID_Siswa', idSiswaDiKelas);
+            query = query.eq('Siswa.Kelas', kelasTerpilih);
+        }
+        if (topikTerpilih) {
+            query = query.eq('ID_Topik', topikTerpilih);
         }
         
         const startIndex = (riwayatCurrentPage - 1) * riwayatRowsPerPage;
-        query = query.range(startIndex, startIndex + riwayatRowsPerPage - 1);
-
-        const { data, error, count } = await query;
+        const { data, error, count } = await query
+            .order('Tanggal_Penilaian', { ascending: false })
+            .order('created_at', { ascending: false })
+            .range(startIndex, startIndex + riwayatRowsPerPage - 1);
+        
         if (error) throw error;
-
         riwayatNilaiCache = data;
-        gambarRiwayat(count); // Kirim total data ke fungsi gambar
-
+        gambarRiwayat(count);
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat riwayat: ' + error.message, 'error');
         container.innerHTML = '<p class="text-center text-red-500">Gagal memuat riwayat.</p>';
@@ -259,14 +178,12 @@ function gambarRiwayatPaginasi(totalRows) {
     paginationControls.innerHTML = '';
     const totalPages = Math.ceil(totalRows / riwayatRowsPerPage);
     if (totalPages <= 1) return;
-    
     const prevButton = document.createElement('button');
     prevButton.innerHTML = '&laquo;';
     prevButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
     prevButton.dataset.page = riwayatCurrentPage - 1;
     if (riwayatCurrentPage === 1) { prevButton.disabled = true; prevButton.classList.add('opacity-50'); }
     paginationControls.appendChild(prevButton);
-
     for (let i = 1; i <= totalPages; i++) {
         const pageButton = document.createElement('button');
         pageButton.innerText = i;
@@ -274,7 +191,6 @@ function gambarRiwayatPaginasi(totalRows) {
         pageButton.className = 'px-3 py-1 rounded-md border ' + (i === riwayatCurrentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100');
         paginationControls.appendChild(pageButton);
     }
-
     const nextButton = document.createElement('button');
     nextButton.innerHTML = '&raquo;';
     nextButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
@@ -284,10 +200,42 @@ function gambarRiwayatPaginasi(totalRows) {
 }
 
 function handleRiwayatPaginasi(e) {
-    if (e.target.dataset.page) {
+    if (e.target && e.target.dataset.page) {
         riwayatCurrentPage = parseInt(e.target.dataset.page, 10);
         muatRiwayatNilai();
     }
+}
+
+function handleDownload() {
+    tampilkanNotifikasi('Mempersiapkan data unduhan...', 'success');
+    const dataToExport = riwayatNilaiCache.map(nilai => {
+        return {
+            Tanggal: new Date(nilai.Tanggal_Penilaian).toLocaleDateString('id-ID'),
+            Nama_Siswa: nilai.Siswa.Nama_Lengkap,
+            Kelas: nilai.Siswa.Kelas,
+            Aspek_Dinilai: nilai.Aspek_Yang_Dinilai,
+            Nilai: nilai.Nilai_Deskriptif,
+            Umpan_Balik: `"${(nilai.Umpan_Balik_Siswa || '').replace(/"/g, '""')}"`
+        };
+    });
+    if (dataToExport.length === 0) {
+        tampilkanNotifikasi('Tidak ada data untuk di-download.', 'warning');
+        return;
+    }
+    const headers = Object.keys(dataToExport[0]);
+    const csvContent = [
+        headers.join(','),
+        ...dataToExport.map(row => headers.map(header => row[header]).join(','))
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `laporan_nilai_karakter.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function tampilkanNotifikasi(message, type) {
