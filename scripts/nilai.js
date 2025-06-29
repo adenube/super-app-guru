@@ -254,7 +254,8 @@ function tampilkanNotifikasi(message, type) {
 
 // --- FUNGSI BARU UNTUK IMPORT CSV ---
 // GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
-function handleImport() {
+// GANTI FUNGSI HANDLEIMPORT YANG LAMA DENGAN VERSI BARU INI
+async function handleImport() {
     const fileInput = document.getElementById('fileInput');
     if (fileInput.files.length === 0) {
         tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
@@ -270,35 +271,28 @@ function handleImport() {
         header: true,
         skipEmptyLines: true,
         complete: async function(results) {
-            const dataToImport = results.data;
-            console.log("Data setelah di-parse:", dataToImport); // Kita tetap log ini untuk debugging
+            
+            // --- INI DIA FILTER ANTI SAMPAH-NYA ---
+            const dataBersih = results.data.filter(row => 
+                row.Nama_Lengkap && row.Nama_Lengkap.trim() !== ''
+            );
+            // -----------------------------------------
+            
+            console.log("Data setelah dibersihkan:", dataBersih);
 
-            if (!dataToImport || dataToImport.length === 0) {
-                tampilkanNotifikasi('File CSV kosong atau tidak ada data.', 'error');
+            if (!dataBersih || dataBersih.length === 0) {
+                tampilkanNotifikasi('File CSV tidak berisi data yang valid.', 'error');
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
+                fileInput.value = '';
                 return;
             }
 
-            // --- VALIDASI YANG SUDAH DIPERBAIKI ---
-            // Kita akan membuat datanya lebih fleksibel
-            const dataUntukDikirim = dataToImport.map(item => {
-                // Supabase sensitif dengan nama kolom, jadi kita pastikan namanya benar
-                return {
-                    Nama_Lengkap: item.Nama_Lengkap || item["Nama Lengkap"],
-                    Kelas: item.Kelas,
-                    Topik_Bahasan: item.Topik_Bahasan || item["Topik Bahasan"],
-                    Aspek_Yang_Dinilai: item.Aspek_Yang_Dinilai || item["Aspek Yang Dinilai"],
-                    Nilai_Skor: item.Nilai_Skor || item["Nilai Skor"],
-                    Umpan_Balik_Siswa: item.Umpan_Balik_Siswa || item["Umpan Balik Siswa"]
-                };
-            });
-
-            tampilkanNotifikasi(`Membaca ${dataUntukDikirim.length} baris data. Mencoba mengimpor...`, 'success');
+            tampilkanNotifikasi(`Membaca ${dataBersih.length} baris data valid. Mencoba mengimpor...`, 'success');
 
             try {
-                // Panggil fungsi SQL 'import_nilai_massal' di Supabase
-                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataUntukDikirim });
+                // Panggil fungsi SQL di Supabase dengan data yang sudah bersih
+                const { data, error } = await supa.rpc('import_nilai_massal', { nilai_batch: dataBersih });
 
                 if (error) throw error;
                 
@@ -310,14 +304,15 @@ function handleImport() {
                 } else {
                     tampilkanNotifikasi(pesan, 'success');
                 }
-                muatRiwayatNilai(true); // Refresh riwayat untuk menampilkan data baru
+                muatRiwayatNilai(true); // Refresh riwayat
 
             } catch(e) {
                 tampilkanNotifikasi('Error saat impor ke database: ' + e.message, 'error');
+                console.error("Error RPC Supabase:", e);
             } finally {
                 tombolImport.disabled = false;
                 tombolImport.innerHTML = "Import & Simpan Nilai";
-                fileInput.value = ''; // Reset input file
+                fileInput.value = '';
             }
         },
         error: function(err) {
