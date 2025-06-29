@@ -1,3 +1,4 @@
+// GANTI DENGAN KUNCI SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -12,7 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tampilkanSiswaBtn').addEventListener('click', handleTampilkanSiswa);
     document.getElementById('simpanPresensiBtn').addEventListener('click', handleSimpanPresensi);
     const paginationControls = document.getElementById('paginationControlsPresensi');
-    if(paginationControls) paginationControls.addEventListener('click', handlePaginasi);
+    if(paginationControls) {
+        paginationControls.addEventListener('click', handlePaginasi);
+    }
 });
 
 async function muatDaftarKelas() {
@@ -20,6 +23,7 @@ async function muatDaftarKelas() {
         const { data, error } = await supa.from('Siswa').select('Kelas');
         if (error) throw error;
         const daftarKelas = [...new Set(data.map(item => item.Kelas))].sort();
+        
         const filterDropdown = document.getElementById('filterKelasPresensi');
         if (!filterDropdown) return;
         while (filterDropdown.options.length > 1) { filterDropdown.remove(1); }
@@ -34,13 +38,12 @@ async function muatDaftarKelas() {
     }
 }
 
-// --- FUNGSI YANG DIPERBAIKI TOTAL ---
 async function handleTampilkanSiswa() {
     const btn = document.getElementById('tampilkanSiswaBtn');
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     
-    const tanggal = document.getElementById('tanggalPresensi').value; // Ini string 'YYYY-MM-DD'
+    const tanggal = document.getElementById('tanggalPresensi').value;
     const kelas = document.getElementById('filterKelasPresensi').value;
 
     if (!tanggal) {
@@ -51,7 +54,6 @@ async function handleTampilkanSiswa() {
     }
 
     try {
-        // 1. Ambil semua siswa dari kelas yang dipilih
         let siswaQuery = supa.from('Siswa').select('id, Nama_Lengkap, Kelas');
         if (kelas) {
             siswaQuery = siswaQuery.eq('Kelas', kelas);
@@ -59,13 +61,11 @@ async function handleTampilkanSiswa() {
         const { data: semuaSiswaDiKelas, error: siswaError } = await siswaQuery;
         if (siswaError) throw siswaError;
 
-        // 2. Ambil ID siswa yang sudah diabsen pada tanggal itu (filter tanggalnya di sini)
         const { data: presensiData, error: presensiError } = await supa.from('Presensi')
             .select('ID_Siswa')
-            .eq('Tanggal_Presensi', tanggal); // Gunakan string tanggal langsung
+            .eq('Tanggal_Presensi', tanggal);
         if (presensiError) throw presensiError;
         
-        // 3. Buat daftar ID yang sudah diabsen & lakukan filter di JavaScript
         const siswaSudahAbsen = presensiData.map(p => p.ID_Siswa);
         siswaKelasCache = semuaSiswaDiKelas.filter(siswa => !siswaSudahAbsen.includes(siswa.id));
         
@@ -77,50 +77,6 @@ async function handleTampilkanSiswa() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = "Tampilkan Siswa";
-    }
-}
-
-
-// --- FUNGSI YANG DISERDEHANAKAN ---
-async function handleSimpanPresensi() {
-    const btn = document.getElementById('simpanPresensiBtn');
-    btn.disabled = true;
-    btn.innerHTML = "Menyimpan...";
-    
-    const dataUntukDisimpan = [];
-    const tanggal = document.getElementById('tanggalPresensi').value;
-
-    document.querySelectorAll('.siswa-row').forEach(baris => {
-        const idSiswa = baris.dataset.id;
-        const statusTerpilih = baris.querySelector(`input[name="status-${idSiswa}"]:checked`);
-        if (statusTerpilih) {
-            dataUntukDisimpan.push({
-                Tanggal_Presensi: tanggal,
-                ID_Siswa: idSiswa,
-                Status: statusTerpilih.value,
-                Catatan: baris.querySelector('.catatan-presensi').value
-            });
-        }
-    });
-
-    try {
-        if (dataUntukDisimpan.length > 0) {
-            // Kita kembali ke .insert() yang lebih sederhana, karena data duplikat sudah disaring
-            const { error } = await supa.from('Presensi').insert(dataUntukDisimpan);
-            if (error) throw error;
-        }
-        tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
-        
-        // Reset tampilan setelah berhasil
-        siswaKelasCache = []; 
-        tampilkanHalaman(1); // Panggil ini untuk membersihkan dan menampilkan pesan
-        document.getElementById('simpanPresensiBtn').classList.add('hidden');
-
-    } catch (error) {
-        tampilkanNotifikasi('Error saat menyimpan: ' + error.message, 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "Simpan Presensi";
     }
 }
 
@@ -159,25 +115,6 @@ function tampilkanHalaman(page) {
     gambarTombolPaginasi();
 }
 
-function tambahBarisKeTabel(siswa) {
-    const tabelBody = document.getElementById('tabelSiswaBody');
-    const row = document.createElement('tr');
-    row.id = `siswa-${siswa.id}`;
-    row.className = 'border-t hover:bg-gray-50';
-    row.innerHTML = `
-      <td class="py-3 px-4">${siswa.Nomor_Induk}</td>
-      <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
-      <td class="py-3 px-4">${siswa.Kelas}</td>
-      <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4">
-        <div class="flex space-x-2">
-          <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-          <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        </div>
-      </td>`;
-    tabelBody.appendChild(row);
-}
-
 function gambarTombolPaginasi() {
     const paginationControls = document.getElementById('paginationControlsPresensi');
     if (!paginationControls) return;
@@ -186,17 +123,38 @@ function gambarTombolPaginasi() {
     const totalPages = Math.ceil(totalRows / rowsPerPage);
     if (totalPages <= 1) return;
     
-    // ... Logika lengkap untuk membuat tombol ...
+    const prevButton = document.createElement('button');
+    prevButton.innerHTML = '&laquo;';
+    prevButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    prevButton.dataset.page = currentPage - 1;
+    if (currentPage === 1) { prevButton.disabled = true; prevButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(prevButton);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.innerText = i;
+        pageButton.dataset.page = i;
+        pageButton.className = 'px-3 py-1 rounded-md border ' + (i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:bg-gray-100');
+        paginationControls.appendChild(pageButton);
+    }
+
+    const nextButton = document.createElement('button');
+    nextButton.innerHTML = '&raquo;';
+    nextButton.className = 'px-3 py-1 rounded-md border bg-white text-gray-600 hover:bg-gray-100';
+    nextButton.dataset.page = currentPage + 1;
+    if (currentPage === totalPages) { nextButton.disabled = true; nextButton.classList.add('opacity-50'); }
+    paginationControls.appendChild(nextButton);
 }
 
 function handlePaginasi(e) {
     if (e.target.dataset.page) {
         const page = parseInt(e.target.dataset.page, 10);
-        if (page > 0) tampilkanHalaman(page);
+        if (page > 0) {
+            tampilkanHalaman(page);
+        }
     }
 }
 
-// Ganti fungsi handleSimpanPresensi yang lama dengan ini
 async function handleSimpanPresensi() {
     const btn = document.getElementById('simpanPresensiBtn');
     btn.disabled = true;
@@ -220,22 +178,18 @@ async function handleSimpanPresensi() {
 
     try {
         if (dataUntukDisimpan.length > 0) {
-            const { error } = await supa
-                .from('Presensi')
-                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' }); // <-- PERBAIKAN DI SINI
-
+            // Kita kembali ke .insert() yang lebih sederhana dan aman
+            const { error } = await supa.from('Presensi').insert(dataUntukDisimpan);
             if (error) throw error;
         }
         tampilkanNotifikasi('Sukses! Data presensi berhasil disimpan.', 'success');
         
         siswaKelasCache = []; 
-        document.getElementById('daftarSiswaContainer').innerHTML = '<p class="text-center text-green-600 font-semibold">Presensi sudah disimpan. Silakan pilih kelas atau tanggal lain.</p>';
-        btn.classList.add('hidden');
-        const paginationControls = document.getElementById('paginationControlsPresensi');
-        if(paginationControls) paginationControls.innerHTML = '';
+        tampilkanHalaman(1); 
+        document.getElementById('simpanPresensiBtn').classList.add('hidden');
 
     } catch (error) {
-        tampilkanNotifikasi('Error: ' + error.message, 'error');
+        tampilkanNotifikasi('Error saat menyimpan: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = "Simpan Presensi";
