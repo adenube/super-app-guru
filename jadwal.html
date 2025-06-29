@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Mengajar - SuperApp Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        .schedule-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .schedule-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between">
+          <div class="flex space-x-4">
+            <div><a href="index.html" class="flex items-center py-5 px-2 text-gray-700 hover:text-gray-900"><span class="font-bold">SuperApp Guru</span></a></div>
+            <div class="hidden md:flex items-center space-x-1">
+                <a href="index.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Manajemen Siswa</a>
+                <a href="dashboard.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Dashboard</a>
+                <a href="presensi.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Presensi</a>
+                <a href="rencana-ajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Rencana Ajar</a>
+                <a href="nilai.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Nilai</a>
+                <a href="jurnal-mengajar.html" class="py-5 px-3 text-gray-700 hover:text-blue-600">Jurnal</a>
+				<a href="jadwal.html" class="py-5 px-3 text-blue-600 border-b-2 border-blue-600 font-semibold">Jadwal</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        <div class="text-center mb-12">
+            <h1 id="headerHari" class="text-4xl font-bold text-gray-800"></h1>
+            <p id="headerTanggal" class="text-lg text-gray-500 mt-2"></p>
+        </div>
+
+        <div id="jadwal-container" class="space-y-6">
+            </div>
+        
+        <div id="jadwal-kosong" class="hidden text-center mt-16">
+             <svg class="mx-auto h-24 w-24 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 class="mt-4 text-xl font-medium text-gray-700">Hore, tidak ada jadwal mengajar hari ini!</h3>
+            <p class="mt-1 text-gray-500">Waktunya istirahat atau mempersiapkan materi.</p>
+        </div>
+
+    </div>
+    
+    <script src="scripts/jadwal.js"></script>
+</body>
+</html>
