@@ -161,7 +161,7 @@ async function handleSimpanPresensi() {
             // GANTI .insert() MENJADI .upsert() YANG LEBIH CANGGIH
             const { error } = await supa
                 .from('Presensi')
-                .upsert(dataUntukDisimpan, { onConflict: 'Tanggal_Presensi,ID_Siswa' });
+                .upsert(dataUntukDisimpan, { onConflict: 'presensi_tanggal_id_siswa_unique' });
 
             if (error) throw error;
         }
