@@ -1,13 +1,17 @@
+const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
-
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
     tampilkanHeaderTanggal();
     muatJadwalHariIni();
-    
-    // Kita akan tambahkan event listener untuk form nanti saat form-nya sudah kita buat
-    // document.getElementById('tombolTambahJadwal').addEventListener('click', tampilkanFormAturJadwal);
+    muatSemuaJadwal(); // Muat juga daftar jadwal mingguan
+
+    // Pasang semua kabel
+    document.getElementById('tombolTambahJadwal').addEventListener('click', tampilkanFormTambah);
+    document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
+    document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
+    document.getElementById('tombolBatal').addEventListener('click', resetForm);
 });
 
 function tampilkanHeaderTanggal() {
@@ -77,6 +81,125 @@ async function muatJadwalHariIni() {
     } catch(e) {
         container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal hari ini: ${e.message}</p>`;
     }
+}
+
+async function muatSemuaJadwal() {
+    const tbody = document.getElementById('jadwal-table-body');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Memuat jadwal...</td></tr>';
+    try {
+        const { data, error } = await supa.from('Jadwal').select('*').order('created_at');
+        if (error) throw error;
+        
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Belum ada jadwal mingguan dibuat.</td></tr>';
+        } else {
+            const urutanHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+            data.sort((a, b) => urutanHari.indexOf(a.Hari) - urutanHari.indexOf(b.Hari) || a.Jam_Mulai.localeCompare(b.Jam_Mulai));
+
+            data.forEach(j => {
+                const row = document.createElement('tr');
+                row.className = 'border-t';
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-bold">${j.Hari}</td>
+                    <td class="py-3 px-4">${j.Jam_Mulai.substring(0,5)} - ${j.Jam_Selesai.substring(0,5)}</td>
+                    <td class="py-3 px-4 font-semibold">${j.Mata_Pelajaran}</td>
+                    <td class="py-3 px-4">${j.Kelas}</td>
+                    <td class="py-3 px-4"><div class="flex space-x-2">
+                        <button class="edit-btn text-sm text-yellow-600 hover:underline" data-id="${j.id}" data-hari="${j.Hari}" data-mulai="${j.Jam_Mulai}" data-selesai="${j.Jam_Selesai}" data-mapel="${j.Mata_Pelajaran}" data-kelas="${j.Kelas}">Edit</button>
+                        <button class="hapus-btn text-sm text-red-600 hover:underline" data-id="${j.id}">Hapus</button>
+                    </div></td>`;
+                tbody.appendChild(row);
+            });
+        }
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-red-500">Gagal memuat jadwal: ${e.message}</td></tr>`;
+    }
+}
+
+async function handleSimpanJadwal(e) {
+    e.preventDefault();
+    const tombolSimpan = document.getElementById('tombolSimpan');
+    tombolSimpan.disabled = true;
+
+    const id = document.getElementById('jadwal-id').value;
+    const dataForm = {
+        Hari: document.getElementById('jadwal-hari').value,
+        Jam_Mulai: document.getElementById('jadwal-jam-mulai').value,
+        Jam_Selesai: document.getElementById('jadwal-jam-selesai').value,
+        Mata_Pelajaran: document.getElementById('jadwal-mapel').value,
+        Kelas: document.getElementById('jadwal-kelas').value,
+    };
+    try {
+        let response;
+        if (id) {
+            tombolSimpan.innerHTML = "Mengupdate...";
+            response = await supa.from('Jadwal').update(dataForm).eq('id', id);
+        } else {
+            tombolSimpan.innerHTML = "Menyimpan...";
+            response = await supa.from('Jadwal').insert([dataForm]);
+        }
+        if (response.error) throw response.error;
+        tampilkanNotifikasi('Jadwal berhasil disimpan!', 'success');
+        resetForm();
+        muatSemuaJadwal();
+        muatJadwalHariIni(); // Refresh jadwal harian juga
+    } catch (error) {
+        tampilkanNotifikasi('Gagal menyimpan jadwal: ' + error.message, 'error');
+    } finally {
+        tombolSimpan.disabled = false;
+    }
+}
+
+function handleAksiJadwal(e) {
+    if (e.target.classList.contains('edit-btn')) {
+        const btn = e.target;
+        document.getElementById('form-title').textContent = 'Edit Jadwal';
+        document.getElementById('tombolSimpan').textContent = 'Update';
+        document.getElementById('tombolBatal').classList.remove('hidden');
+        document.getElementById('form-container').classList.remove('hidden');
+
+        document.getElementById('jadwal-id').value = btn.dataset.id;
+        document.getElementById('jadwal-hari').value = btn.dataset.hari;
+        document.getElementById('jadwal-jam-mulai').value = btn.dataset.mulai;
+        document.getElementById('jadwal-jam-selesai').value = btn.dataset.selesai;
+        document.getElementById('jadwal-mapel').value = btn.dataset.mapel;
+        document.getElementById('jadwal-kelas').value = btn.dataset.kelas;
+        
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    } else if (e.target.classList.contains('hapus-btn')) {
+        if (confirm('Yakin ingin menghapus jadwal ini?')) {
+            hapusJadwal(e.target.dataset.id);
+        }
+    }
+}
+
+async function hapusJadwal(id) {
+    try {
+        const { error } = await supa.from('Jadwal').delete().eq('id', id);
+        if (error) throw error;
+        tampilkanNotifikasi('Jadwal berhasil dihapus.', 'warning');
+        muatSemuaJadwal();
+        muatJadwalHariIni();
+    } catch (error) {
+        tampilkanNotifikasi('Gagal menghapus jadwal: ' + error.message, 'error');
+    }
+}
+
+function tampilkanFormTambah() {
+    resetForm();
+    document.getElementById('form-container').classList.remove('hidden');
+    document.getElementById('form-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+    document.getElementById('formJadwal').reset();
+    document.getElementById('jadwal-id').value = '';
+    document.getElementById('form-title').textContent = 'Tambah Jadwal Baru';
+    document.getElementById('tombolSimpan').textContent = 'Simpan';
+    document.getElementById('tombolSimpan').disabled = false;
+    document.getElementById('tombolBatal').classList.add('hidden');
+    document.getElementById('form-container').classList.add('hidden');
 }
 
 function tampilkanNotifikasi(message, type) {
