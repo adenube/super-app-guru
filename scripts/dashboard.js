@@ -11,6 +11,7 @@ let rekapDetailCache = {};
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
+	document.getElementById('laporan-container').addEventListener('click', handleDownloadKelas);
     
     const modal = document.getElementById('detailModal');
     document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
@@ -74,61 +75,57 @@ async function muatLaporanPresensi() {
     emptyState.classList.remove('hidden');
 
     try {
-        // CARA BARU: Ambil data presensi dan data siswa yang terkait sekaligus
-        const { data, error } = await supa
-            .from('Presensi')
-            .select(`
-                Status,
-                Siswa ( id, Nama_Lengkap, Kelas )
-            `)
-            .gte('Tanggal_Presensi', startDate)
-            .lte('Tanggal_Presensi', endDate);
-
+        const { data, error } = await supa.rpc('get_rekap_presensi_detail', { /* ... */ });
         if (error) throw error;
-
-        // Proses data di sisi browser (JavaScript)
-        const rekap = {};
-        const detail = {};
-
-        data.forEach(presensi => {
-            if (presensi.Siswa) { // Hanya proses jika data siswanya ada
-                const kelas = presensi.Siswa.Kelas;
-                const nama = presensi.Siswa.Nama_Lengkap;
-                const status = presensi.Status;
-                const statusMap = { 'Hadir': 'H', 'Sakit': 'S', 'Izin': 'I', 'Alpha': 'A' };
-                const statusSingkat = statusMap[status];
-
-                if (!rekap[kelas]) {
-                  rekap[kelas] = { kelas: kelas, H: 0, S: 0, I: 0, A: 0, JUMLAH: 0 };
-                  detail[kelas] = { H: [], S: [], I: [], A: [] };
-                }
-                if (rekap[kelas].hasOwnProperty(statusSingkat)) {
-                  rekap[kelas][statusSingkat]++;
-                  rekap[kelas].JUMLAH++;
-                  detail[kelas][statusSingkat].push(nama);
-                }
-            }
-        });
         
-        rekapDetailCache = detail; // Simpan data detail ke cache
-        const summaryData = Object.values(rekap).sort((a, b) => a.kelas.localeCompare(b.kelas));
+        rekapDetailCache = data.detailedData;
+        const summaryData = data.summaryData;
+
+        // Kosongkan tabel lama
+        const tabelContainer = document.getElementById('laporan-container');
+        tabelContainer.innerHTML = ''; // Hapus semua isi sebelumnya
         
         if (summaryData && summaryData.length > 0) {
-            emptyState.classList.add('hidden');
+            // Buat tabel baru dengan header yang sudah di-upgrade
+            const table = document.createElement('table');
+            table.className = 'min-w-full bg-white';
+            table.innerHTML = `
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Hadir</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Sakit</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Izin</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Alpha</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Jumlah</th>
+                        <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="rekapPresensiBody"></tbody>
+            `;
+            
+            const tabelBody = table.querySelector('#rekapPresensiBody');
             summaryData.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'border-t hover:bg-blue-50';
+                // Tambahkan kolom baru untuk tombol Download
                 row.innerHTML = `
                   <td class="py-3 px-4 font-medium">${item.kelas}</td>
                   <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="H">${item.H}</span></td>
                   <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="S">${item.S}</span></td>
                   <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="I">${item.I}</span></td>
                   <td class="py-3 px-4 text-center"><span class="clickable-cell" data-kelas="${item.kelas}" data-status="A">${item.A}</span></td>
-                  <td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>`;
+                  <td class="py-3 px-4 text-center font-semibold">${item.JUMLAH}</td>
+                  <td class="py-3 px-4 text-center">
+                    <button class="download-kelas-btn bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs" data-kelas="${item.kelas}">
+                        PDF
+                    </button>
+                  </td>`;
                 tabelBody.appendChild(row);
             });
+            tabelContainer.appendChild(table); // Masukkan tabel yang sudah jadi ke container
         } else {
-            emptyState.innerHTML = '<p>Tidak ada data presensi pada rentang tanggal tersebut.</p>';
+            tabelContainer.innerHTML = '<p class="text-center text-gray-500 py-8">Tidak ada data presensi pada rentang tanggal tersebut.</p>';
         }
     } catch (error) {
         emptyState.innerHTML = `<p class="text-red-500">Gagal memuat laporan.</p>`;
@@ -181,4 +178,86 @@ function tampilkanNotifikasi(message, type) {
         notification.style.transform = 'translateY(-20px)';
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
+}
+
+// --- FUNGSI BARU UNTUK DOWNLOAD PDF PER KELAS ---
+async function handleDownloadKelas(e) {
+    if (!e.target || !e.target.classList.contains('download-kelas-btn')) return;
+
+    const btn = e.target;
+    const kelas = btn.dataset.kelas;
+    const startDate = document.getElementById('tanggalMulai').value;
+    const endDate = document.getElementById('tanggalSelesai').value;
+    
+    tampilkanNotifikasi(`Mempersiapkan PDF untuk kelas ${kelas}...`, 'success');
+    btn.disabled = true;
+    btn.innerHTML = '...';
+
+    try {
+        // Kita ambil data detail untuk kelas ini dari cache yang sudah ada
+        const detailHadir = rekapDetailCache[kelas]?.H || [];
+        const detailSakit = rekapDetailCache[kelas]?.S || [];
+        const detailIzin = rekapDetailCache[kelas]?.I || [];
+        const detailAlpha = rekapDetailCache[kelas]?.A || [];
+
+        // Buat elemen HTML sementara untuk dicetak
+        const printArea = document.createElement('div');
+        printArea.style.padding = '20px';
+        printArea.style.fontFamily = 'sans-serif';
+        printArea.innerHTML = `
+            <h2 style="font-size: 18px; font-weight: 600;">Laporan Detail Presensi</h2>
+            <p style="font-size: 14px; margin-bottom: 4px;">Kelas: ${kelas}</p>
+            <p style="font-size: 12px; color: #555; margin-bottom: 16px;">
+                Periode: ${new Date(startDate).toLocaleDateString('id-ID')} - ${new Date(endDate).toLocaleDateString('id-ID')}
+            </p>
+        `;
+
+        // Buat tabel detail
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.innerHTML = `
+            <thead>
+                <tr style="background-color: #f3f4f6;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nama Siswa</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>`;
+        
+        const tbody = table.querySelector('tbody');
+        const allStudents = [
+            ...detailHadir.map(nama => ({nama, status: 'Hadir'})),
+            ...detailSakit.map(nama => ({nama, status: 'Sakit'})),
+            ...detailIzin.map(nama => ({nama, status: 'Izin'})),
+            ...detailAlpha.map(nama => ({nama, status: 'Alpha'}))
+        ].sort((a,b) => a.nama.localeCompare(b.nama));
+
+        allStudents.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="border: 1px solid #ddd; padding: 8px;">${s.nama}</td><td style="border: 1px solid #ddd; padding: 8px;">${s.status}</td>`;
+            tbody.appendChild(tr);
+        });
+
+        printArea.appendChild(table);
+        document.body.appendChild(printArea);
+
+        // "Foto" elemen dan buat PDF
+        const { jsPDF } = window.jspdf;
+        await html2canvas(printArea).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, pdfHeight - 20);
+            pdf.save(`laporan-presensi-${kelas}.pdf`);
+            document.body.removeChild(printArea);
+        });
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal membuat PDF: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'PDF';
+    }
 }
