@@ -1,3 +1,4 @@
+// GANTI DENGAN KUNCI SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -5,9 +6,8 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 document.addEventListener('DOMContentLoaded', () => {
     tampilkanHeaderTanggal();
     muatJadwalHariIni();
-    muatSemuaJadwal(); // Muat juga daftar jadwal mingguan
-
-    // Pasang semua kabel
+    muatSemuaJadwal();
+    
     document.getElementById('tombolTambahJadwal').addEventListener('click', tampilkanFormTambah);
     document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
     document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
@@ -16,68 +16,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function tampilkanHeaderTanggal() {
     const sekarang = new Date();
-    const namaHari = sekarang.toLocaleDateString('id-ID', { weekday: 'long' });
-    const tanggalLengkap = sekarang.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    document.getElementById('headerHari').textContent = `Jadwal Hari Ini: ${namaHari}`;
+    const opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const tanggalLengkap = sekarang.toLocaleDateString('id-ID', opsi);
+    document.getElementById('headerHari').textContent = `Jadwal Hari Ini`;
     document.getElementById('headerTanggal').textContent = tanggalLengkap;
 }
 
 async function muatJadwalHariIni() {
     const container = document.getElementById('jadwal-harian-container');
+    const viewKosong = document.getElementById('jadwal-kosong');
     container.innerHTML = '<p class="text-center text-gray-500">Mencari jadwal...</p>';
 
     const namaHariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
 
     try {
-        const { data, error } = await supa
-            .from('Jadwal')
-            .select('*')
-            .eq('Hari', namaHariIni)
-            .order('Jam_Mulai');
-
+        const { data, error } = await supa.from('Jadwal').select('*').eq('Hari', namaHariIni).order('Jam_Mulai');
         if (error) throw error;
         
-        container.innerHTML = ''; // Kosongkan container
-
+        container.innerHTML = '';
         if (data.length === 0) {
-            container.innerHTML = `
-            <div class="text-center mt-10 p-6 bg-white rounded-lg shadow-md">
-                <svg class="mx-auto h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l-3 3m0 0l-3-3m3 3v12a2 2 0 002 2h3a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-                <h3 class="mt-4 text-xl font-medium text-gray-700">Hore, Santai Dulu!</h3>
-                <p class="mt-1 text-gray-500">Tidak ada jadwal mengajar hari ini.</p>
-            </div>
-            `;
+            viewKosong.classList.remove('hidden');
             return;
         }
 
+        viewKosong.classList.add('hidden');
         data.forEach(jadwal => {
             const card = document.createElement('div');
             const jamSelesai = jadwal.Jam_Selesai;
             const waktuSekarang = new Date().toTimeString().substring(0, 5);
-            
-            // Cek apakah jadwal sudah lewat
             const isPast = waktuSekarang > jamSelesai;
             
-            card.className = `schedule-card-mini rounded-lg shadow p-6 flex items-center space-x-6 ${isPast ? 'is-past' : ''}`;
-            
+            card.className = `schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6 ${isPast ? 'is-past' : ''}`;
             const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
-
             card.innerHTML = `
-                <div class="text-center flex-shrink-0">
-                    <p class="text-2xl font-bold">${jamMulai}</p>
-                </div>
-                <div class="border-l-2 border-white/30 pl-6 flex-grow">
-                    <p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p>
-                    <p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p>
-                </div>
-                ${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}
-            `;
+                <div class="text-center flex-shrink-0"><p class="text-2xl font-bold">${jamMulai}</p><p class="text-sm opacity-80">sampai</p><p class="text-lg font-medium">${jamSelesai.substring(0,5)}</p></div>
+                <div class="border-l-2 border-white/30 pl-6 flex-grow"><p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p><p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p></div>
+                ${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}`;
             container.appendChild(card);
         });
-
     } catch(e) {
         container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal hari ini: ${e.message}</p>`;
     }
@@ -89,26 +65,16 @@ async function muatSemuaJadwal() {
     try {
         const { data, error } = await supa.from('Jadwal').select('*').order('created_at');
         if (error) throw error;
-        
         tbody.innerHTML = '';
         if (data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Belum ada jadwal mingguan dibuat.</td></tr>';
         } else {
             const urutanHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
             data.sort((a, b) => urutanHari.indexOf(a.Hari) - urutanHari.indexOf(b.Hari) || a.Jam_Mulai.localeCompare(b.Jam_Mulai));
-
             data.forEach(j => {
                 const row = document.createElement('tr');
                 row.className = 'border-t';
-                row.innerHTML = `
-                    <td class="py-3 px-4 font-bold">${j.Hari}</td>
-                    <td class="py-3 px-4">${j.Jam_Mulai.substring(0,5)} - ${j.Jam_Selesai.substring(0,5)}</td>
-                    <td class="py-3 px-4 font-semibold">${j.Mata_Pelajaran}</td>
-                    <td class="py-3 px-4">${j.Kelas}</td>
-                    <td class="py-3 px-4"><div class="flex space-x-2">
-                        <button class="edit-btn text-sm text-yellow-600 hover:underline" data-id="${j.id}" data-hari="${j.Hari}" data-mulai="${j.Jam_Mulai}" data-selesai="${j.Jam_Selesai}" data-mapel="${j.Mata_Pelajaran}" data-kelas="${j.Kelas}">Edit</button>
-                        <button class="hapus-btn text-sm text-red-600 hover:underline" data-id="${j.id}">Hapus</button>
-                    </div></td>`;
+                row.innerHTML = `<td class="py-3 px-4 font-bold">${j.Hari}</td><td class="py-3 px-4">${j.Jam_Mulai.substring(0,5)} - ${j.Jam_Selesai.substring(0,5)}</td><td class="py-3 px-4 font-semibold">${j.Mata_Pelajaran}</td><td class="py-3 px-4">${j.Kelas}</td><td class="py-3 px-4"><div class="flex space-x-2"><button class="edit-btn text-sm text-yellow-600 hover:underline" data-id="${j.id}">Edit</button><button class="hapus-btn text-sm text-red-600 hover:underline" data-id="${j.id}">Hapus</button></div></td>`;
                 tbody.appendChild(row);
             });
         }
@@ -121,7 +87,6 @@ async function handleSimpanJadwal(e) {
     e.preventDefault();
     const tombolSimpan = document.getElementById('tombolSimpan');
     tombolSimpan.disabled = true;
-
     const id = document.getElementById('jadwal-id').value;
     const dataForm = {
         Hari: document.getElementById('jadwal-hari').value,
@@ -143,7 +108,7 @@ async function handleSimpanJadwal(e) {
         tampilkanNotifikasi('Jadwal berhasil disimpan!', 'success');
         resetForm();
         muatSemuaJadwal();
-        muatJadwalHariIni(); // Refresh jadwal harian juga
+        muatJadwalHariIni();
     } catch (error) {
         tampilkanNotifikasi('Gagal menyimpan jadwal: ' + error.message, 'error');
     } finally {
@@ -152,24 +117,28 @@ async function handleSimpanJadwal(e) {
 }
 
 function handleAksiJadwal(e) {
-    if (e.target.classList.contains('edit-btn')) {
-        const btn = e.target;
+    const target = e.target;
+    if (target.classList.contains('edit-btn')) {
+        const row = target.closest('tr');
+        const cells = row.querySelectorAll('td');
+        const [jamMulai, jamSelesai] = cells[1].textContent.split(' - ');
+        
         document.getElementById('form-title').textContent = 'Edit Jadwal';
         document.getElementById('tombolSimpan').textContent = 'Update';
         document.getElementById('tombolBatal').classList.remove('hidden');
         document.getElementById('form-container').classList.remove('hidden');
 
-        document.getElementById('jadwal-id').value = btn.dataset.id;
-        document.getElementById('jadwal-hari').value = btn.dataset.hari;
-        document.getElementById('jadwal-jam-mulai').value = btn.dataset.mulai;
-        document.getElementById('jadwal-jam-selesai').value = btn.dataset.selesai;
-        document.getElementById('jadwal-mapel').value = btn.dataset.mapel;
-        document.getElementById('jadwal-kelas').value = btn.dataset.kelas;
+        document.getElementById('jadwal-id').value = target.dataset.id;
+        document.getElementById('jadwal-hari').value = cells[0].textContent;
+        document.getElementById('jadwal-jam-mulai').value = jamMulai;
+        document.getElementById('jadwal-jam-selesai').value = jamSelesai;
+        document.getElementById('jadwal-mapel').value = cells[2].textContent;
+        document.getElementById('jadwal-kelas').value = cells[3].textContent;
         
         window.scrollTo({top: 0, behavior: 'smooth'});
-    } else if (e.target.classList.contains('hapus-btn')) {
+    } else if (target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus jadwal ini?')) {
-            hapusJadwal(e.target.dataset.id);
+            hapusJadwal(target.dataset.id);
         }
     }
 }
