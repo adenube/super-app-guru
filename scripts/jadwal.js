@@ -3,6 +3,9 @@ const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Variabel baru untuk menyimpan data jadwal harian
+let jadwalHarianCache = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     tampilkanHeaderTanggal();
     muatJadwalHariIni();
@@ -12,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
     document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
     document.getElementById('tombolBatal').addEventListener('click', resetForm);
+
+    // Timer "detak jantung" yang akan mengecek status setiap 60 detik (60000 ms)
+    setInterval(updateTampilanWaktuJadwal, 60000);
 });
 
 function tampilkanHeaderTanggal() {
@@ -30,33 +36,76 @@ async function muatJadwalHariIni() {
     const namaHariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
 
     try {
-        const { data, error } = await supa.from('Jadwal').select('*').eq('Hari', namaHariIni).order('Jam_Mulai');
+        const { data, error } = await supa.from('Jadwal')
+            .select('*').eq('Hari', namaHariIni).order('Jam_Mulai');
         if (error) throw error;
         
-        container.innerHTML = '';
-        if (data.length === 0) {
-            viewKosong.classList.remove('hidden');
-            return;
-        }
-
-        viewKosong.classList.add('hidden');
-        data.forEach(jadwal => {
-            const card = document.createElement('div');
-            const jamSelesai = jadwal.Jam_Selesai;
-            const waktuSekarang = new Date().toTimeString().substring(0, 5);
-            const isPast = waktuSekarang > jamSelesai;
-            
-            card.className = `schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6 ${isPast ? 'is-past' : ''}`;
-            const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
-            card.innerHTML = `
-                <div class="text-center flex-shrink-0"><p class="text-2xl font-bold">${jamMulai}</p><p class="text-sm opacity-80">sampai</p><p class="text-lg font-medium">${jamSelesai.substring(0,5)}</p></div>
-                <div class="border-l-2 border-white/30 pl-6 flex-grow"><p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p><p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p></div>
-                ${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}`;
-            container.appendChild(card);
-        });
+        jadwalHarianCache = data; // Simpan data ke cache
+        gambarJadwalHarian(); // Gambar jadwal dari cache
+        
     } catch(e) {
         container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal hari ini: ${e.message}</p>`;
     }
+}
+
+// Fungsi BARU untuk menggambar jadwal harian dari cache
+function gambarJadwalHarian() {
+    const container = document.getElementById('jadwal-harian-container');
+    const viewKosong = document.getElementById('jadwal-kosong');
+    const waktuSekarang = new Date().toTimeString().substring(0, 5);
+
+    container.innerHTML = '';
+    
+    if (jadwalHarianCache.length === 0) {
+        viewKosong.classList.remove('hidden');
+        return;
+    }
+
+    viewKosong.classList.add('hidden');
+    jadwalHarianCache.forEach(jadwal => {
+        const card = document.createElement('div');
+        const jamSelesai = jadwal.Jam_Selesai.substring(0, 5);
+        const isPast = waktuSekarang > jamSelesai;
+
+        card.id = `jadwal-card-${jadwal.id}`;
+        card.className = `schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6 ${isPast ? 'is-past' : ''}`;
+        
+        const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
+
+        card.innerHTML = `
+            <div class="text-center flex-shrink-0">
+                <p class="text-2xl font-bold">${jamMulai}</p>
+                <p class="text-sm opacity-80">s/d</p>
+                <p class="text-lg font-medium">${jamSelesai}</p>
+            </div>
+            <div class="border-l-2 border-white/30 pl-6 flex-grow">
+                <p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p>
+                <p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p>
+            </div>
+            <div id="status-container-${jadwal.id}">
+                ${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Fungsi BARU untuk update status secara live
+function updateTampilanWaktuJadwal() {
+    const waktuSekarang = new Date().toTimeString().substring(0, 5);
+    jadwalHarianCache.forEach(jadwal => {
+        const card = document.getElementById(`jadwal-card-${jadwal.id}`);
+        if (card && !card.classList.contains('is-past')) {
+            const jamSelesai = jadwal.Jam_Selesai.substring(0, 5);
+            if (waktuSekarang > jamSelesai) {
+                card.classList.add('is-past');
+                const statusContainer = card.querySelector(`#status-container-${jadwal.id}`);
+                if (statusContainer) {
+                    statusContainer.innerHTML = '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>';
+                }
+            }
+        }
+    });
 }
 
 async function muatSemuaJadwal() {
