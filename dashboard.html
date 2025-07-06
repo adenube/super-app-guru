@@ -7,8 +7,6 @@
     <title>Dashboard - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
@@ -38,7 +36,6 @@
     <div class="max-w-6xl mx-auto py-8 px-4" id="dashboard-content">
         <h1 class="text-3xl font-bold text-blue-800 mb-8">Dashboard Rekapitulasi</h1>
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-			<div id="jadwal-hari-ini" class="mb-8"></div>
             <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-semibold text-blue-700">Statistik Total Murid</h2><button id="muatStatistikBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-md text-sm">Muat Statistik</button></div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 p-4 rounded-md border border-blue-100 text-center"><div class="text-sm text-gray-500">Laki-laki</div><div class="text-3xl font-bold text-blue-600" id="totalLaki">-</div></div>
