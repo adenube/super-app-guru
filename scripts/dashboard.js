@@ -8,18 +8,28 @@ let rekapDetailCache = {};
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
-    const modal = document.getElementById('detailModal');
-    document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
-    document.getElementById('closeModalXBtn').addEventListener('click', () => modal.classList.add('hidden'));
-    document.getElementById('laporan-presensi-container').addEventListener('click', handleAksiLaporan);
     
+    const modal = document.getElementById('detailModal');
+    if (modal) {
+        document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
+        document.getElementById('closeModalXBtn').addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'detailModal') modal.classList.add('hidden');
+        });
+    }
+    
+    const laporanContainer = document.getElementById('laporan-presensi-container');
+    if(laporanContainer) laporanContainer.addEventListener('click', handleAksiLaporan);
+
     const endDateInput = document.getElementById('endDate');
     const startDateInput = document.getElementById('startDate');
-    const today = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(today.getDate() - 6);
-    endDateInput.valueAsDate = today;
-    startDateInput.valueAsDate = oneWeekAgo;
+    if (endDateInput && startDateInput) {
+        const today = new Date();
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(today.getDate() - 6);
+        endDateInput.valueAsDate = today;
+        startDateInput.valueAsDate = oneWeekAgo;
+    }
 });
 
 async function muatRekapSiswa() {
@@ -27,10 +37,18 @@ async function muatRekapSiswa() {
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     try {
-        const { data, error, count } = await supa.from('Siswa').select('id', { count: 'exact' });
+        // Ambil data Jenis Kelamin dan hitung totalnya
+        const { data, error, count } = await supa.from('Siswa').select('Jenis_Kelamin', { count: 'exact' });
         if (error) throw error;
-        document.getElementById('totalMurid').textContent = count;
-        // Kita bisa tambahkan logika hitung L/P jika diperlukan
+        
+        const totalMurid = count;
+        const totalLaki = data.filter(s => s.Jenis_Kelamin === 'Laki-laki').length;
+        const totalPerempuan = totalMurid - totalLaki;
+
+        document.getElementById('totalMurid').textContent = totalMurid;
+        document.getElementById('totalLaki').textContent = totalLaki;
+        document.getElementById('totalPerempuan').textContent = totalPerempuan;
+
     } catch (error) {
         tampilkanNotifikasi("Gagal memuat statistik: " + error.message, "error");
     } finally {
@@ -61,7 +79,6 @@ async function muatLaporanPresensi() {
             .lte('Tanggal_Presensi', endDate);
         if (error) throw error;
 
-        // Proses data di sisi browser
         const rekap = {};
         const detail = {};
         presensiData.forEach(p => {
@@ -132,9 +149,7 @@ function handleAksiLaporan(e) {
     }
 }
 
-function handleCellClick(e) {
-    if (!e.target || !e.target.classList.contains('clickable-cell')) return;
-    const cell = e.target;
+function handleCellClick(cell) {
     const jumlah = parseInt(cell.textContent, 10);
     if (isNaN(jumlah) || jumlah === 0) return;
     
@@ -152,7 +167,7 @@ function handleCellClick(e) {
     const namaSiswa = rekapDetailCache[kelas] ? (rekapDetailCache[kelas][status] || []) : [];
     
     if (namaSiswa.length > 0) {
-        namaSiswa.sort().forEach(nama => { // Urutkan nama sesuai abjad
+        namaSiswa.sort().forEach(nama => {
             const li = document.createElement('li');
             li.textContent = nama;
             modalList.appendChild(li);
@@ -173,7 +188,7 @@ async function handleDownloadKelas(btn) {
 
     try {
         const { data, error } = await supa.from('Presensi')
-            .select(`Status, Tanggal_Presensi, Siswa(Nama_Lengkap)`)
+            .select(`Status, Tanggal_Presensi, Siswa!inner(Nama_Lengkap)`)
             .eq('Siswa.Kelas', kelas)
             .gte('Tanggal_Presensi', startDate)
             .lte('Tanggal_Presensi', endDate)
@@ -218,7 +233,7 @@ function generatePdf(kelas, startDate, endDate, data) {
         body: body,
     });
     
-    pdf.save(`laporan-presensi-${kelas}.pdf`);
+    pdf.save(`laporan-presensi-${kelas}-${startDate}.pdf`);
 }
 
 function tampilkanNotifikasi(message, type) {
@@ -228,8 +243,6 @@ function tampilkanNotifikasi(message, type) {
     notification.textContent = message;
     document.body.appendChild(notification);
     setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-20px)';
-        setTimeout(() => { notification.remove(); }, 300);
+        notification.remove();
     }, 3000);
 }
