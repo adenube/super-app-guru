@@ -142,6 +142,7 @@ function setupDropZone(zone) {
     });
 }
 
+// GANTI FUNGSI LAMA DENGAN VERSI BARU YANG LEBIH PINTAR INI
 function handleDetailKartu(e) {
     // Pastikan yang diklik adalah kartu, bukan tombol di dalamnya
     if (e.target.classList.contains('edit-rpp-btn') || e.target.classList.contains('hapus-rpp-btn')) {
@@ -157,20 +158,33 @@ function handleDetailKartu(e) {
         const modalContent = document.getElementById('modalRppContent');
 
         modalTitle.textContent = rpp.Topik_Bahasan;
+        
+        // --- LOGIKA BARU UNTUK MEMBUAT BANYAK LINK ---
+        let linkHtml = '<p>-</p>'; // Default text jika tidak ada link
+        if (rpp.Link_Materi_Ajar) {
+            // 1. Pisahkan teks link menjadi array berdasarkan baris baru
+            const links = rpp.Link_Materi_Ajar.split('\n').filter(link => link.trim() !== '');
+            // 2. Buat elemen <a> untuk setiap link
+            linkHtml = links.map(link => 
+                `<a href="${link}" target="_blank" rel="noopener noreferrer" class="block text-blue-500 hover:underline truncate">${link}</a>`
+            ).join('');
+        }
+        // --- AKHIR LOGIKA BARU ---
+
         modalContent.innerHTML = `
             <p><strong>Mata Pelajaran:</strong> ${rpp.Mata_Pelajaran}</p>
             <p><strong>Status:</strong> ${rpp.Status_Kanban || 'Belum Dikerjakan'}</p>
             <div class="mt-4">
                 <strong class="block mb-1">Ringkasan/Tujuan:</strong>
-                <p class="p-2 bg-gray-50 rounded">${rpp.Ringkasan_Materi || '-'}</p>
+                <p class="p-2 bg-gray-50 rounded whitespace-pre-wrap">${rpp.Ringkasan_Materi || '-'}</p>
             </div>
             <div class="mt-4">
                 <strong class="block mb-1">Pendekatan Mengajar:</strong>
-                <p class="p-2 bg-gray-50 rounded">${rpp.Pendekatan_Mengajar || '-'}</p>
+                <p class="p-2 bg-gray-50 rounded whitespace-pre-wrap">${rpp.Pendekatan_Mengajar || '-'}</p>
             </div>
             <div class="mt-4">
                 <strong class="block mb-1">Link Materi:</strong>
-                ${rpp.Link_Materi_Ajar ? `<a href="${rpp.Link_Materi_Ajar}" target="_blank" class="text-blue-500 hover:underline">${rpp.Link_Materi_Ajar}</a>` : '<p>-</p>'}
+                ${linkHtml}
             </div>
         `;
         modal.classList.remove('hidden');
