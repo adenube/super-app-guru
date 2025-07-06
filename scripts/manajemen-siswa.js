@@ -150,9 +150,12 @@ async function handleSimpanSiswa(e) {
     }
 }
 
+// GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 function handleAksiTabel(e) {
     if(!e.target) return;
+    
     const id = e.target.dataset.id;
+
     if (e.target.classList.contains('edit-btn')) {
         const siswa = semuaSiswaCache.find(s => s.id === id);
         if (siswa) {
@@ -166,16 +169,15 @@ function handleAksiTabel(e) {
             document.getElementById('tombolBatalSiswa').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-	} else if (e.target.classList.contains('buat-akun-btn')) {
-		if (confirm('Yakin ingin membuat akun login untuk siswa ini?')) {
-			buatAkunLoginSiswa(id);
-		}
-	}	
-    } else if (e.target.classList.contains('delete-btn')) {
+    } else if (e.target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
         }
-    }
+    } else if (e.target.classList.contains('buat-akun-btn')) { // INI YANG SEHARUSNYA
+		if (confirm('Yakin ingin membuat akun login untuk siswa ini?')) {
+			buatAkunLoginSiswa(id);
+		}
+	}
 }
 
 async function hapusDataSiswa(id) {
