@@ -71,9 +71,10 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
       <td class="py-3 px-4">
         <div class="flex space-x-2">
-          <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-          <button class="delete-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        </div>
+          <button class="edit-btn ..." data-id="${siswa.id}">Edit</button>
+        <button class="hapus-btn ..." data-id="${siswa.id}">Hapus</button>
+        <button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>
+		</div>
       </td>`;
     tabelBody.appendChild(row);
 }
@@ -165,6 +166,11 @@ function handleAksiTabel(e) {
             document.getElementById('tombolBatalSiswa').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+	} else if (e.target.classList.contains('buat-akun-btn')) {
+		if (confirm('Yakin ingin membuat akun login untuk siswa ini?')) {
+			buatAkunLoginSiswa(id);
+		}
+	}	
     } else if (e.target.classList.contains('delete-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
@@ -270,4 +276,19 @@ async function handleImportSiswa() {
             tombolImport.innerHTML = "Import & Simpan Siswa";
         }
     });
+}
+
+async function buatAkunLoginSiswa(idSiswa) {
+    try {
+        const { data, error } = await supa.rpc('buat_akun_siswa', { siswa_id: idSiswa });
+        if (error) throw error;
+        
+        if (data.status === 'success') {
+            alert(`Akun Berhasil Dibuat!\nEmail: ${data.email}\nPassword: ${data.password}\n\nTolong catat dan berikan ke siswa.`);
+        } else {
+            alert('Gagal membuat akun: ' + data.message);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
 }
