@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Murid - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
@@ -39,8 +39,10 @@
         </div>
       </div>
     </nav>
-    
-    <div class="max-w-6xl mx-auto py-8 px-4">
+
+    <div class="max-w-7xl mx-auto py-8 px-4">
+        <h1 class="text-3xl font-bold text-blue-800 mb-8">Manajemen Siswa</h1>
+
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
             <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle">Form Tambah Murid Baru</h2>
@@ -60,6 +62,21 @@
                 <div id="paginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
             </div>
         </div>
+
+        <div class="md:col-span-2 bg-white border-l-4 border-green-400 p-6 rounded-lg shadow-lg mt-8">
+            <h2 class="text-xl font-semibold mb-4 text-green-800">Import Siswa dari CSV</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Format file CSV harus memiliki header: <strong>Nomor_Induk, Nama_Lengkap, Kelas, Jenis_Kelamin</strong>.
+                <a href="#" id="downloadContohSiswa" class="text-blue-600 hover:underline">Download contoh format</a>.
+            </p>
+            <div class="flex items-center space-x-4">
+                <input type="file" id="fileInputSiswa" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
+                <button id="tombolImportSiswa" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                    Import
+                </button>
+            </div>
+        </div>
+
     </div>
     
     <script src="scripts/manajemen-siswa.js"></script>
