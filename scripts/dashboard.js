@@ -1,4 +1,3 @@
-// ISI DENGAN KUNCI SUPABASE-MU
 const SUPABASE_URL = "https://amlbepeqidkamfosxfxv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJlcGVxaWRrYW1mb3N4Znh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMTUxMjQsImV4cCI6MjA2NjY5MTEyNH0.LS1-bUSkRMrSKle-UF72RBbehNxb7xw5RzcR1XLcQ88";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -37,8 +36,7 @@ async function muatRekapSiswa() {
     btn.disabled = true;
     btn.innerHTML = "Memuat...";
     try {
-        // Ambil data Jenis Kelamin dan hitung totalnya
-        const { data, error, count } = await supa.from('Siswa').select('Jenis_Kelamin', { count: 'exact' });
+        const { data, error, count } = await supa.from('Siswa').select('id, Jenis_Kelamin', { count: 'exact' });
         if (error) throw error;
         
         const totalMurid = count;
@@ -105,16 +103,7 @@ async function muatLaporanPresensi() {
         if (summaryData.length > 0) {
             const table = document.createElement('table');
             table.className = 'min-w-full bg-white';
-            table.innerHTML = `<thead class="bg-gray-100"><tr>
-                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">H</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">S</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">I</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">A</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Jumlah</th>
-                <th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Aksi</th>
-            </tr></thead><tbody id="rekapPresensiBody"></tbody>`;
-            
+            table.innerHTML = `<thead class="bg-gray-100"><tr><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">H</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">S</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">I</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">A</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Jumlah</th><th class="py-3 px-4 text-center text-sm font-semibold text-gray-700">Aksi</th></tr></thead><tbody id="rekapPresensiBody"></tbody>`;
             const tabelBody = table.querySelector('#rekapPresensiBody');
             summaryData.forEach(item => {
                 const row = document.createElement('tr');
@@ -152,20 +141,15 @@ function handleAksiLaporan(e) {
 function handleCellClick(cell) {
     const jumlah = parseInt(cell.textContent, 10);
     if (isNaN(jumlah) || jumlah === 0) return;
-    
     const kelas = cell.dataset.kelas;
     const status = cell.dataset.status;
-    
     const modal = document.getElementById('detailModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalList = document.getElementById('modalList');
     const statusLengkap = {'H':'Hadir','S':'Sakit','I':'Izin','A':'Alpha'}[status] || status;
-    
     modalTitle.textContent = `Siswa Kelas ${kelas} (Status: ${statusLengkap})`;
     modalList.innerHTML = '';
-    
     const namaSiswa = rekapDetailCache[kelas] ? (rekapDetailCache[kelas][status] || []) : [];
-    
     if (namaSiswa.length > 0) {
         namaSiswa.sort().forEach(nama => {
             const li = document.createElement('li');
@@ -199,9 +183,7 @@ async function handleDownloadKelas(btn) {
             tampilkanNotifikasi('Tidak ada data detail untuk diunduh.', 'warning');
             return;
         }
-        
         generatePdf(kelas, startDate, endDate, data);
-
     } catch(e) {
         tampilkanNotifikasi('Gagal membuat PDF: ' + e.message, 'error');
     } finally {
@@ -213,12 +195,10 @@ async function handleDownloadKelas(btn) {
 function generatePdf(kelas, startDate, endDate, data) {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'pt', 'a4');
-    
     pdf.setFontSize(18);
     pdf.text(`Laporan Detail Presensi - Kelas ${kelas}`, 40, 60);
     pdf.setFontSize(12);
     pdf.text(`Periode: ${startDate} s/d ${endDate}`, 40, 80);
-    
     const headers = [["No", "Tanggal", "Nama Siswa", "Status Kehadiran"]];
     const body = data.map((item, index) => [
         index + 1,
@@ -226,13 +206,11 @@ function generatePdf(kelas, startDate, endDate, data) {
         item.Siswa.Nama_Lengkap,
         item.Status
     ]);
-    
     pdf.autoTable({
         startY: 100,
         head: headers,
         body: body,
     });
-    
     pdf.save(`laporan-presensi-${kelas}-${startDate}.pdf`);
 }
 
