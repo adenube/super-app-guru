@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
+	document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
+	document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);	
 
     // Setelah semua siap, baru muat data
     muatDataSiswa();
@@ -211,4 +213,70 @@ function tampilkanNotifikasi(message, type) {
         notification.style.transform = 'translateY(-20px)';
         setTimeout(() => { notification.remove(); }, 300);
     }, 3000);
+}
+
+// --- FUNGSI BARU UNTUK DOWNLOAD CONTOH FORMAT ---
+function handleDownloadContoh(e) {
+    e.preventDefault();
+    const csvContent = "Nomor_Induk,Nama_Lengkap,Kelas,Jenis_Kelamin\n12345,Ahmad Luthfi,7A,Laki-laki\n12346,Bunga Citra,7B,Perempuan";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "contoh_import_siswa.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+// --- FUNGSI BARU UNTUK IMPORT SISWA DARI CSV ---
+async function handleImportSiswa() {
+    const fileInput = document.getElementById('fileInputSiswa');
+    if (fileInput.files.length === 0) {
+        tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const tombolImport = document.getElementById('tombolImportSiswa');
+    tombolImport.disabled = true;
+    tombolImport.innerHTML = "Memproses...";
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results) {
+            const dataToInsert = results.data.map(row => ({
+                Nomor_Induk: row.Nomor_Induk,
+                Nama_Lengkap: row.Nama_Lengkap,
+                Kelas: row.Kelas,
+                Jenis_Kelamin: row.Jenis_Kelamin
+            }));
+
+            if (dataToInsert.length > 0) {
+                try {
+                    const { error } = await supa.from('Siswa').insert(dataToInsert);
+                    if (error) throw error;
+                    
+                    tampilkanNotifikasi(`${dataToInsert.length} siswa berhasil di-import!`, 'success');
+                    muatDataSiswa(true); // Refresh tabel siswa
+                } catch (e) {
+                    tampilkanNotifikasi('Error saat import: ' + e.message, 'error');
+                }
+            } else {
+                tampilkanNotifikasi('Tidak ada data valid untuk di-import.', 'warning');
+            }
+
+            tombolImport.disabled = false;
+            tombolImport.innerHTML = "Import & Simpan Siswa";
+            fileInput.value = ''; // Reset file input
+        },
+        error: function(err) {
+            tampilkanNotifikasi('Gagal membaca file CSV: ' + err.message, 'error');
+            tombolImport.disabled = false;
+            tombolImport.innerHTML = "Import & Simpan Siswa";
+        }
+    });
 }
