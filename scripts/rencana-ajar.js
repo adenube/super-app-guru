@@ -8,10 +8,22 @@ let kartuYangDiDrag = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     muatSemuaRpp();
+    
+    // Event listener untuk form
     document.getElementById('formRpp').addEventListener('submit', handleSimpanRpp);
     document.getElementById('tombolTambahBaru').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tombolBatal').addEventListener('click', resetFormRpp);
+    
+    // Event listener untuk drop zone
     document.querySelectorAll('.drop-zone').forEach(setupDropZone);
+    
+    // Event listener untuk modal (pop-up)
+    const modal = document.getElementById('detailRppModal');
+    document.getElementById('closeRppModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('closeRppModalXBtn').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => {
+        if (e.target.id === 'detailRppModal') modal.classList.add('hidden');
+    });
 });
 
 async function muatSemuaRpp() {
@@ -55,31 +67,26 @@ function gambarKanbanBoard() {
 function buatKartuRpp(rppData) {
     const div = document.createElement('div');
     div.id = rppData.id;
+    // Tambahkan data-id ke elemen kartu utama untuk deteksi klik
+    div.dataset.id = rppData.id; 
     div.className = 'kanban-card bg-white p-3 rounded-md shadow';
     div.draggable = true;
     
     div.innerHTML = `
-        <p class="font-semibold text-gray-800">${rppData.Topik_Bahasan}</p>
-        <p class="text-sm text-gray-600">${rppData.Mata_Pelajaran}</p>
-        <div class="text-xs text-gray-500 mt-2 truncate" title="${rppData.Pendekatan_Mengajar || ''}">${rppData.Pendekatan_Mengajar || ''}</div>
+        <p class="font-semibold text-gray-800 pointer-events-none">${rppData.Topik_Bahasan}</p>
+        <p class="text-sm text-gray-600 pointer-events-none">${rppData.Mata_Pelajaran}</p>
+        <div class="text-xs text-gray-500 mt-2 truncate pointer-events-none" title="${rppData.Pendekatan_Mengajar || ''}">${rppData.Pendekatan_Mengajar || ''}</div>
         <div class="flex justify-end mt-2 space-x-2">
             <button class="edit-rpp-btn text-xs text-blue-600 hover:underline" data-id="${rppData.id}">Edit</button>
             <button class="hapus-rpp-btn text-xs text-red-600 hover:underline" data-id="${rppData.id}">Hapus</button>
-        </div>
-    `;
+        </div>`;
+
+    // Pasang event listener
     div.addEventListener('dragstart', handleDragStart);
     div.addEventListener('dragend', handleDragEnd);
+    // Listener untuk membuka detail saat kartu diklik
+    div.addEventListener('click', handleDetailKartu); 
     
-    // Pasang listener langsung ke tombol di kartu yang baru dibuat
-    div.querySelector('.edit-rpp-btn').addEventListener('click', (e) => {
-        e.stopPropagation(); // Hentikan event agar tidak menyebar ke elemen kartu
-        isiFormUntukEdit(e.target.dataset.id);
-    });
-    div.querySelector('.hapus-rpp-btn').addEventListener('click', (e) => {
-        e.stopPropagation(); // Hentikan event agar tidak menyebar
-        handleHapusRpp(e.target.dataset.id);
-    });
-
     return div;
 }
 
@@ -123,6 +130,41 @@ function setupDropZone(zone) {
             }
         }
     });
+}
+
+function handleDetailKartu(e) {
+    // Pastikan yang diklik adalah kartu, bukan tombol di dalamnya
+    if (e.target.classList.contains('edit-rpp-btn') || e.target.classList.contains('hapus-rpp-btn')) {
+        return;
+    }
+
+    const id = e.currentTarget.dataset.id;
+    const rpp = semuaRppCache.find(r => r.id === id);
+
+    if (rpp) {
+        const modal = document.getElementById('detailRppModal');
+        const modalTitle = document.getElementById('modalRppTitle');
+        const modalContent = document.getElementById('modalRppContent');
+
+        modalTitle.textContent = rpp.Topik_Bahasan;
+        modalContent.innerHTML = `
+            <p><strong>Mata Pelajaran:</strong> ${rpp.Mata_Pelajaran}</p>
+            <p><strong>Status:</strong> ${rpp.Status_Kanban || 'Belum Dikerjakan'}</p>
+            <div class="mt-4">
+                <strong class="block mb-1">Ringkasan/Tujuan:</strong>
+                <p class="p-2 bg-gray-50 rounded">${rpp.Ringkasan_Materi || '-'}</p>
+            </div>
+            <div class="mt-4">
+                <strong class="block mb-1">Pendekatan Mengajar:</strong>
+                <p class="p-2 bg-gray-50 rounded">${rpp.Pendekatan_Mengajar || '-'}</p>
+            </div>
+            <div class="mt-4">
+                <strong class="block mb-1">Link Materi:</strong>
+                ${rpp.Link_Materi_Ajar ? `<a href="${rpp.Link_Materi_Ajar}" target="_blank" class="text-blue-500 hover:underline">${rpp.Link_Materi_Ajar}</a>` : '<p>-</p>'}
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
 }
 
 // --- FUNGSI-FUNGSI UNTUK FORM & AKSI KARTU ---
