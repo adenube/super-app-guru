@@ -86,6 +86,16 @@ function buatKartuRpp(rppData) {
     div.addEventListener('dragend', handleDragEnd);
     // Listener untuk membuka detail saat kartu diklik
     div.addEventListener('click', handleDetailKartu); 
+	
+	// Pasang listener langsung ke tombol di kartu yang baru dibuat - ANYAAARRR
+    div.querySelector('.edit-rpp-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); // Hentikan event agar tidak menyebar ke elemen kartu
+        isiFormUntukEdit(e.target.dataset.id);
+    });
+    div.querySelector('.hapus-rpp-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); // Hentikan event agar tidak menyebar
+        handleHapusRpp(e.target.dataset.id);
+    });
     
     return div;
 }
