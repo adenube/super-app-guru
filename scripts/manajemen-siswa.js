@@ -168,6 +168,22 @@ async function handleAksiTabel(e) {
     }
 }
 
+// ===== INI FUNGSI YANG HILANG & KITA TAMBAHKAN KEMBALI =====
+function isiFormUntukEdit(id) {
+    const siswa = semuaSiswaCache.find(s => s.id === id);
+    if (siswa) {
+        document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
+        document.getElementById('ID_Siswa').value = siswa.id;
+        document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
+        document.getElementById('Nama_Lengkap').value = siswa.Nama_Lengkap;
+        document.getElementById('Kelas').value = siswa.Kelas;
+        document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa.Jenis_Kelamin}"]`).checked = true;
+        document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
+        document.getElementById('tombolBatalSiswa').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
 async function hapusDataSiswa(id) {
     try {
         const { error } = await supa.from('Siswa').delete().eq('id', id);
