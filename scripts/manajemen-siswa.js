@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
+	document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
+    document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
     
     // Listener untuk form pop-up baru
     document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
