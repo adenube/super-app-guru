@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
     muatDataSiswa();
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
+    
+    // Pasang satu listener utama di tabel
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
+
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
@@ -147,18 +150,20 @@ async function handleSimpanSiswa(e) {
 
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 // --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
-function handleAksiTabel(e) {
-    if (!e.target) return;
-    const id = e.target.dataset.id;
-    if (e.target.classList.contains('edit-btn')) {
-        // ... logika edit ...
-    } else if (e.target.classList.contains('hapus-btn')) {
+async function handleAksiTabel(e) {
+    // Cek apakah yang diklik adalah tombol yang kita mau
+    const target = e.target;
+    const id = target.dataset.id;
+
+    if (target.classList.contains('edit-btn')) {
+        isiFormUntukEdit(id);
+    } else if (target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
         }
-    } else if (e.target.classList.contains('buat-akun-btn')) {
+    } else if (target.classList.contains('buat-akun-btn')) {
         if (confirm('Yakin ingin membuat akun login untuk siswa ini? Akun tidak bisa diubah setelah dibuat.')) {
-            buatAkunLoginSiswa(e.target, id);
+            buatAkunLoginSiswa(target, id);
         }
     }
 }
