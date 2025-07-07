@@ -1,7 +1,12 @@
-// Koneksi Supabase sudah dibuat oleh auth.js, jadi kita tidak perlu deklarasi ulang
+const SUPABASE_URL = "PASTE_PROJECT_URL_SUPABASE_LO_DI_SINI";
+const SUPABASE_ANON_KEY = "PASTE_ANON_PUBLIC_KEY_LO_DI_SINI";
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
     muatDataPortal();
+    // Tambahkan listener untuk tombol impor
+    document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
+    document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
 });
 
 async function muatDataPortal() {
@@ -80,5 +85,53 @@ function tampilkanNilai(daftarNilai) {
             </div>
         `;
         container.appendChild(card);
+    });
+}
+
+// --- FUNGSI BARU DARI MANAJEMEN SISWA ---
+function handleDownloadContoh(e) {
+    e.preventDefault();
+    const csvContent = "Nomor_Induk,Nama_Lengkap,Kelas,Jenis_Kelamin\n12345,Ahmad Luthfi,7A,Laki-laki";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "contoh_import_siswa.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+async function handleImportSiswa() {
+    const fileInput = document.getElementById('fileInputSiswa');
+    if (fileInput.files.length === 0) {
+        tampilkanNotifikasi('Silakan pilih file CSV terlebih dahulu.', 'warning');
+        return;
+    }
+    const file = fileInput.files[0];
+    const tombolImport = document.getElementById('tombolImportSiswa');
+    tombolImport.disabled = true;
+    tombolImport.innerHTML = "Memproses...";
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results) {
+            const dataToInsert = results.data;
+            if (dataToInsert.length > 0) {
+                try {
+                    const { error } = await supa.from('Siswa').insert(dataToInsert);
+                    if (error) throw error;
+                    tampilkanNotifikasi(`${dataToInsert.length} siswa berhasil di-import!`, 'success');
+                    // Muat ulang data portal jika perlu
+                } catch (e) {
+                    tampilkanNotifikasi('Error saat import: ' + e.message, 'error');
+                }
+            }
+            tombolImport.disabled = false;
+            tombolImport.innerHTML = "Import & Simpan Siswa";
+            fileInput.value = '';
+        }
     });
 }
