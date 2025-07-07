@@ -7,13 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
     muatDataSiswa();
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
-    
-    // Pasang satu listener utama di tabel
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
-
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
-    document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
-    document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
+    
+    // Listener untuk form pop-up baru
+    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
+    document.getElementById('akun_batal_btn').addEventListener('click', () => {
+        document.getElementById('modalBuatAkun').classList.add('hidden');
+    });
 });
 
 async function muatDataSiswa(forceReload = false) {
@@ -62,11 +63,15 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
       <td class="py-3 px-4">${siswa.Kelas}</td>
       <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4"><div class="flex space-x-2">
-        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-        <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        ${!siswa.auth_user_id ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold">Akun Ada</span>`}
-      </div></td>`;
+      <td class="py-3 px-4">
+        <div class="flex space-x-2">
+          <button class="edit-btn ..." data-id="${siswa.id}">Edit</button>
+          <button class="hapus-btn ..." data-id="${siswa.id}">Hapus</button>
+          ${!siswa.auth_user_id 
+            ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` 
+            : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
+        </div>
+      </td>`;
     tabelBody.appendChild(row);
 }
 
@@ -146,16 +151,82 @@ async function handleSimpanSiswa(e) {
 function handleAksiTabel(e) {
     if (!e.target) return;
     const id = e.target.dataset.id;
+
     if (e.target.classList.contains('edit-btn')) {
-        isiFormUntukEdit(id); // Panggil fungsi yang hilang
+        isiFormUntukEdit(id);
     } else if (e.target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
         }
     } else if (e.target.classList.contains('buat-akun-btn')) {
-        if (confirm('Yakin ingin membuat akun login untuk siswa ini?')) {
-            buatAkunLoginSiswa(e.target, id);
-        }
+        tampilkanFormBuatAkun(id);
+    }
+}
+
+// --- FUNGSI BARU UNTUK MEMBUAT AKUN SISWA ---
+
+function tampilkanFormBuatAkun(idSiswa) {
+    const siswa = semuaSiswaCache.find(s => s.id === idSiswa);
+    if (!siswa) {
+        tampilkanNotifikasi('Data siswa tidak ditemukan!', 'error');
+        return;
+    }
+    const modal = document.getElementById('modalBuatAkun');
+    
+    // Generate usulan email dan password
+    const namaSimple = siswa.Nama_Lengkap.toLowerCase().replace(/ /g, '.');
+    const emailDisarankan = `${namaSimple}.${siswa.Nomor_Induk}@superapp.guru`;
+    const passwordDisarankan = siswa.Nomor_Induk;
+
+    document.getElementById('akun_siswa_id').value = siswa.id;
+    document.getElementById('akun_nama_siswa').textContent = siswa.Nama_Lengkap;
+    document.getElementById('akun_email').value = emailDisarankan;
+    document.getElementById('akun_password').value = passwordDisarankan;
+    
+    modal.classList.remove('hidden');
+}
+
+async function handleSimpanAkunSiswa(e) {
+    e.preventDefault();
+    const btn = document.getElementById('akun_simpan_btn');
+    btn.disabled = true;
+    btn.innerHTML = 'Membuat...';
+
+    const idSiswa = document.getElementById('akun_siswa_id').value;
+    const email = document.getElementById('akun_email').value;
+    const password = document.getElementById('akun_password').value;
+
+    try {
+        // 1. Buat user di Supabase Auth
+        const { data: authData, error: authError } = await supa.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    role: 'siswa' // Menyimpan role di metadata
+                }
+            }
+        });
+
+        if (authError) throw authError;
+
+        // 2. Jika berhasil, update kolom auth_user_id di tabel Siswa
+        const { error: updateError } = await supa
+            .from('Siswa')
+            .update({ auth_user_id: authData.user.id })
+            .eq('id', idSiswa);
+
+        if (updateError) throw updateError;
+
+        tampilkanNotifikasi(`Akun untuk ${email} berhasil dibuat!`, 'success');
+        document.getElementById('modalBuatAkun').classList.add('hidden');
+        muatDataSiswa(); // Refresh tabel untuk menghilangkan tombol
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal membuat akun: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Buat Akun Sekarang';
     }
 }
 
