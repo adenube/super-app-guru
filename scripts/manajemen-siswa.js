@@ -22,17 +22,13 @@ async function muatDataSiswa(forceReload = false) {
       emptyState.innerHTML = `<p>Memuat data...</p>`;
       emptyState.classList.remove('hidden');
     }
-    
     try {
         const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
         if (error) throw error;
-        
         semuaSiswaCache = data;
         currentPage = forceReload ? 1 : currentPage;
         tampilkanHalaman(currentPage);
-
     } catch (error) {
-        console.error('Error saat memuat data siswa:', error);
         tampilkanNotifikasi('Gagal memuat data: ' + error.message, 'error');
         if(emptyState) emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
     }
@@ -43,7 +39,6 @@ function tampilkanHalaman(page) {
     const tabelBody = document.getElementById('tabelSiswaBody');
     const emptyState = document.getElementById('emptyState');
     tabelBody.innerHTML = '';
-    
     if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
         if(emptyState) emptyState.classList.remove('hidden');
         if(emptyState) emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
@@ -67,13 +62,11 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
       <td class="py-3 px-4">${siswa.Kelas}</td>
       <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4">
-        <div class="flex space-x-2">
-          <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
-          <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-          ${!siswa.auth_user_id ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold">Akun Ada</span>`}
-        </div>
-      </td>`;
+      <td class="py-3 px-4"><div class="flex space-x-2">
+        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
+        <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
+        ${!siswa.auth_user_id ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold">Akun Ada</span>`}
+      </div></td>`;
     tabelBody.appendChild(row);
 }
 
@@ -150,21 +143,35 @@ async function handleSimpanSiswa(e) {
 
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 // --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
-async function handleAksiTabel(e) {
-    // Cek apakah yang diklik adalah tombol yang kita mau
-    const target = e.target;
-    const id = target.dataset.id;
-
-    if (target.classList.contains('edit-btn')) {
-        isiFormUntukEdit(id);
-    } else if (target.classList.contains('hapus-btn')) {
+function handleAksiTabel(e) {
+    if (!e.target) return;
+    const id = e.target.dataset.id;
+    if (e.target.classList.contains('edit-btn')) {
+        isiFormUntukEdit(id); // Panggil fungsi yang hilang
+    } else if (e.target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
         }
-    } else if (target.classList.contains('buat-akun-btn')) {
-        if (confirm('Yakin ingin membuat akun login untuk siswa ini? Akun tidak bisa diubah setelah dibuat.')) {
-            buatAkunLoginSiswa(target, id);
+    } else if (e.target.classList.contains('buat-akun-btn')) {
+        if (confirm('Yakin ingin membuat akun login untuk siswa ini?')) {
+            buatAkunLoginSiswa(e.target, id);
         }
+    }
+}
+
+// ===== INI FUNGSI YANG HILANG & KITA TAMBAHKAN KEMBALI =====
+function isiFormUntukEdit(id) {
+    const siswa = semuaSiswaCache.find(s => s.id === id);
+    if (siswa) {
+        document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
+        document.getElementById('ID_Siswa').value = siswa.id;
+        document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
+        document.getElementById('Nama_Lengkap').value = siswa.Nama_Lengkap;
+        document.getElementById('Kelas').value = siswa.Kelas;
+        document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa.Jenis_Kelamin}"]`).checked = true;
+        document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
+        document.getElementById('tombolBatalSiswa').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
