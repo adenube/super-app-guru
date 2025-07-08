@@ -68,7 +68,8 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">
         <div class="flex space-x-2">
           <button class="edit-btn ..." data-id="${siswa.id}">Edit</button>
-          <button class="hapus-btn ..." data-id="${siswa.id}">Hapus</button>
+		  <button class="hapus-btn text-sm text-gray-600 hover:underline" data-id="${siswa.id}">Hapus Siswa</button>
+		  ${siswa.auth_user_id ? `<button class="hapus-paksa-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Hapus Akun</button>` : ''}
           ${!siswa.auth_user_id 
             ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` 
             : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
@@ -156,6 +157,15 @@ function handleAksiTabel(e) {
 
     if (e.target.classList.contains('edit-btn')) {
         isiFormUntukEdit(id);
+	} else if (e.target.classList.contains('hapus-paksa-btn')) {
+		const siswa = semuaSiswaCache.find(s => s.id === id);
+		if(siswa && siswa.auth_user_id) {
+			hapusUserAuth(siswa.auth_user_id);
+		} else {
+			// Jika tidak ada auth_id, jalankan hapus biasa
+			hapusDataSiswa(id);
+		}
+	}
     } else if (e.target.classList.contains('hapus-btn')) {
         if (confirm('Yakin ingin menghapus siswa ini?')) {
             hapusDataSiswa(id);
@@ -365,5 +375,30 @@ async function buatAkunLoginSiswa(tombol, idSiswa) {
         alert('Error: ' + error.message);
         tombol.disabled = false;
         tombol.innerHTML = 'Buat Akun';
+    }
+}
+
+// FUNGSI BARU UNTUK HAPUS PAKSA
+async function hapusUserAuth(auth_id) {
+    if (!auth_id) {
+        tampilkanNotifikasi("Siswa ini tidak punya akun login.", "warning");
+        return;
+    }
+    if (confirm(`Ini akan menghapus user dengan ID: ${auth_id} secara permanen dari sistem Authentication. Lanjutkan?`)) {
+        try {
+            tampilkanNotifikasi("Mencoba menghapus user...", "success");
+            const { data, error } = await supa.functions.invoke('hapus-user-paksa', {
+                body: { user_id: auth_id }
+            });
+
+            if (error) throw error;
+
+            tampilkanNotifikasi(data.message, 'success');
+            // Hapus juga data dari tabel Siswa setelah user Auth dihapus
+            await supa.from('Siswa').delete().eq('auth_user_id', auth_id);
+            muatDataSiswa(true); // Refresh data
+        } catch (e) {
+            tampilkanNotifikasi("Gagal hapus user: " + e.message, 'error');
+        }
     }
 }
