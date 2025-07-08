@@ -151,27 +151,34 @@ async function handleSimpanSiswa(e) {
 
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 // --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
+// GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 function handleAksiTabel(e) {
-    if (!e.target) return;
+    if (!e.target.dataset.id) return; // Keluar jika yang diklik bukan elemen dengan data-id
+
     const id = e.target.dataset.id;
 
     if (e.target.classList.contains('edit-btn')) {
-        isiFormUntukEdit(id);
-	} else if (e.target.classList.contains('hapus-paksa-btn')) {
-		const siswa = semuaSiswaCache.find(s => s.id === id);
-		if(siswa && siswa.auth_user_id) {
-			hapusUserAuth(siswa.auth_user_id);
-		} else {
-			// Jika tidak ada auth_id, jalankan hapus biasa
-			hapusDataSiswa(id);
-		}
-	}
+        const siswa = semuaSiswaCache.find(s => s.id === id);
+        if (siswa) {
+            document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
+            document.getElementById('ID_Siswa').value = siswa.id;
+            document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
+            document.getElementById('Nama_Lengkap').value = siswa.Nama_Lengkap;
+            document.getElementById('Kelas').value = siswa.Kelas;
+            document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa.Jenis_Kelamin}"]`).checked = true;
+            document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
+            document.getElementById('tombolBatalSiswa').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     } else if (e.target.classList.contains('hapus-btn')) {
-        if (confirm('Yakin ingin menghapus siswa ini?')) {
-            hapusDataSiswa(id);
+        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)?')) {
+            const siswa = semuaSiswaCache.find(s => s.id === id);
+            hapusDataSiswa(id, siswa.auth_user_id);
         }
     } else if (e.target.classList.contains('buat-akun-btn')) {
-        tampilkanFormBuatAkun(id);
+        if (confirm('Yakin ingin membuat akun login untuk siswa ini? Akun tidak bisa diubah setelah dibuat.')) {
+            buatAkunLoginSiswa(e.target, id);
+        }
     }
 }
 
