@@ -3,28 +3,26 @@ let semuaSiswaCache = [];
 let currentPage = 1;
 const rowsPerPage = 5;
 
+// --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
     muatDataSiswa();
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
-	document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
+    document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
-    
-    // Listener untuk form pop-up baru
     document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
     document.getElementById('akun_batal_btn').addEventListener('click', () => {
         document.getElementById('modalBuatAkun').classList.add('hidden');
     });
 });
 
+// --- FUNGSI-FUNGSI ---
+
 async function muatDataSiswa(forceReload = false) {
     const emptyState = document.getElementById('emptyState');
-    if(emptyState) {
-      emptyState.innerHTML = `<p>Memuat data...</p>`;
-      emptyState.classList.remove('hidden');
-    }
+    if(emptyState) { emptyState.innerHTML = `<p>Memuat data...</p>`; emptyState.classList.remove('hidden'); }
     try {
         const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
         if (error) throw error;
@@ -43,8 +41,7 @@ function tampilkanHalaman(page) {
     const emptyState = document.getElementById('emptyState');
     tabelBody.innerHTML = '';
     if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
-        if(emptyState) emptyState.classList.remove('hidden');
-        if(emptyState) emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
+        if(emptyState) { emptyState.classList.remove('hidden'); emptyState.innerHTML = `<p>Belum ada data murid.</p>`; }
     } else {
         if(emptyState) emptyState.classList.add('hidden');
         const startIndex = (page - 1) * rowsPerPage;
@@ -65,16 +62,11 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4">${siswa.Nama_Lengkap}</td>
       <td class="py-3 px-4">${siswa.Kelas}</td>
       <td class="py-3 px-4">${siswa.Jenis_Kelamin}</td>
-      <td class="py-3 px-4">
-        <div class="flex space-x-2">
-          <button class="edit-btn ..." data-id="${siswa.id}">Edit</button>
-		  <button class="hapus-btn text-sm text-gray-600 hover:underline" data-id="${siswa.id}">Hapus Siswa</button>
-		  ${siswa.auth_user_id ? `<button class="hapus-paksa-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Hapus Akun</button>` : ''}
-          ${!siswa.auth_user_id 
-            ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` 
-            : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
-        </div>
-      </td>`;
+      <td class="py-3 px-4"><div class="flex space-x-2">
+        <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
+        <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
+        ${!siswa.auth_user_id ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
+      </div></td>`;
     tabelBody.appendChild(row);
 }
 
@@ -153,32 +145,16 @@ async function handleSimpanSiswa(e) {
 // --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 function handleAksiTabel(e) {
-    if (!e.target.dataset.id) return; // Keluar jika yang diklik bukan elemen dengan data-id
-
+    if (!e.target.dataset.id) return;
     const id = e.target.dataset.id;
-
     if (e.target.classList.contains('edit-btn')) {
-        const siswa = semuaSiswaCache.find(s => s.id === id);
-        if (siswa) {
-            document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
-            document.getElementById('ID_Siswa').value = siswa.id;
-            document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
-            document.getElementById('Nama_Lengkap').value = siswa.Nama_Lengkap;
-            document.getElementById('Kelas').value = siswa.Kelas;
-            document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa.Jenis_Kelamin}"]`).checked = true;
-            document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
-            document.getElementById('tombolBatalSiswa').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        isiFormUntukEdit(id);
     } else if (e.target.classList.contains('hapus-btn')) {
-        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)?')) {
-            const siswa = semuaSiswaCache.find(s => s.id === id);
-            hapusDataSiswa(id, siswa.auth_user_id);
+        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)? Operasi ini tidak bisa dibatalkan.')) {
+            hapusDataSiswa(id);
         }
     } else if (e.target.classList.contains('buat-akun-btn')) {
-        if (confirm('Yakin ingin membuat akun login untuk siswa ini? Akun tidak bisa diubah setelah dibuat.')) {
-            buatAkunLoginSiswa(e.target, id);
-        }
+        tampilkanFormBuatAkun(id);
     }
 }
 
@@ -267,12 +243,24 @@ function isiFormUntukEdit(id) {
 
 async function hapusDataSiswa(id) {
     try {
-        const { error } = await supa.from('Siswa').delete().eq('id', id);
-        if (error) throw error;
-        tampilkanNotifikasi('Siswa berhasil dihapus.', 'warning');
-        muatDataSiswa();
+        const siswa = semuaSiswaCache.find(s => s.id === id);
+        if (siswa && siswa.auth_user_id) {
+            tampilkanNotifikasi(`Menghapus akun login untuk ${siswa.Nama_Lengkap}...`, 'success');
+            const { error: authError } = await supa.rpc('hapus_user_paksa', { user_id_to_delete: siswa.auth_user_id });
+            if (authError) {
+                // Jika errornya karena user tidak ditemukan (mungkin sudah dihapus manual), kita tetap lanjut
+                if (!authError.message.includes('User not found')) {
+                    throw authError;
+                }
+                console.warn("User di Auth tidak ditemukan, mungkin sudah dihapus. Lanjut menghapus data siswa.");
+            }
+        }
+        const { error: siswaError } = await supa.from('Siswa').delete().eq('id', id);
+        if (siswaError) throw siswaError;
+        tampilkanNotifikasi('Siswa berhasil dihapus total dari sistem.', 'warning');
+        muatDataSiswa(true);
     } catch (error) {
-        tampilkanNotifikasi('Error: ' + error.message, 'error');
+        tampilkanNotifikasi('Gagal menghapus siswa: ' + error.message, 'error');
     }
 }
 
