@@ -3,45 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Siswa - SuperApp Guru</title>
+    <title>Portal Siswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f7fafc; }
+        .badge { transition: transform 0.2s; }
+        .badge:hover { transform: scale(1.1); }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100">
-    
-    <nav class="bg-white shadow-md">
+    <nav class="bg-white shadow-sm">
       <div class="max-w-5xl mx-auto px-4">
-        <div class="flex justify-between">
-          <div class="flex items-center">
-            <a href="#" class="flex items-center py-5 px-2 text-gray-700">
-                <span class="font-bold">Portal Siswa</span>
-            </a>
-          </div>
-          <div class="flex items-center space-x-1">
-            <button id="logout-button" class="py-2 px-3 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-md shadow-md">
-                Logout
-            </button>
-          </div>
+        <div class="flex justify-between items-center py-3">
+            <span class="font-bold text-lg text-blue-600">Portal Siswa</span>
+            <button id="logout-button" class="py-2 px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg shadow">Logout</button>
         </div>
       </div>
     </nav>
 
-    <div class="max-w-5xl mx-auto py-8 px-4">
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Selamat Datang, <span id="nama-siswa" class="text-blue-600">...</span>!</h1>
-            <p class="text-gray-600">Ini adalah halaman progres belajarmu.</p>
+    <main class="max-w-5xl mx-auto py-8 px-4">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Selamat Datang, <span id="nama-siswa" class="text-indigo-600">...</span>!</h1>
+            <p class="text-gray-600 mt-1">Ini adalah ringkasan progres dan pencapaian belajarmu.</p>
         </div>
         
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Daftar Nilai & Umpan Balik</h2>
-            <div id="nilai-container" class="space-y-4">
+        <div class="mb-8">
+             <h2 class="text-xl font-semibold text-gray-700 mb-4">Pencapaian & Badge</h2>
+             <div id="galeri-badge" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <p id="loading-badge" class="text-sm text-gray-500 col-span-full">Memuat pencapaian...</p>
+             </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">5 Penilaian Terakhir</h2>
+            <div id="riwayat-nilai-container" class="space-y-4">
                 </div>
         </div>
-    </div>
+    </main>
     
     <script src="scripts/auth.js"></script>
     <script src="scripts/portal-siswa.js"></script>
