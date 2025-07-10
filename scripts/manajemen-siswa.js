@@ -5,28 +5,14 @@ const rowsPerPage = 5;
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Listener untuk tombol utama
     document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
-    
-    // Listener untuk form
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
-    
-    // Listener untuk aksi di tabel dan paginasi
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
-    
-    // Listener untuk fitur impor
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
-
-    // Listener untuk modal
-    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
-    document.getElementById('akun_batal_btn').addEventListener('click', () => document.getElementById('modalBuatAkun').classList.add('hidden'));
-	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
-    document.getElementById('batalResetBtn').addEventListener('click', () => document.getElementById('modalResetPassword').classList.add('hidden'));
-
-    muatDataSiswa(); // Muat data awal
+    muatDataSiswa();
 });
 
 // --- FUNGSI-FUNGSI ---
