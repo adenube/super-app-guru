@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('akun_batal_btn').addEventListener('click', () => {
         document.getElementById('modalBuatAkun').classList.add('hidden');
     });
+	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
+    document.getElementById('batalResetBtn').addEventListener('click', () => {
+        document.getElementById('modalResetPassword').classList.add('hidden');
+    });
 });
 
 // --- FUNGSI-FUNGSI ---
@@ -65,7 +69,8 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4"><div class="flex space-x-2">
         <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
         <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        ${!siswa.auth_user_id ? `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
+        ${!siswa.auth_user_id ? `<button class="lihat-akun-btn bg-purple-500 text-white px-2 py-1 rounded-md text-xs" data-authid="${siswa.auth_user_id}" data-nama="${siswa.Nama_Lengkap}">Lihat Akun</button>` : `<button class="buat-akun-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
+      
       </div></td>`;
     tabelBody.appendChild(row);
 }
@@ -147,6 +152,11 @@ async function handleSimpanSiswa(e) {
 function handleAksiTabel(e) {
     if (!e.target.dataset.id) return;
     const id = e.target.dataset.id;
+	if (e.target.classList.contains('lihat-akun-btn')) {
+        const authId = e.target.dataset.authid;
+        const namaSiswa = e.target.dataset.nama;
+        tampilkanModalResetPassword(authId, namaSiswa);
+    }
     if (e.target.classList.contains('edit-btn')) {
         isiFormUntukEdit(id);
     } else if (e.target.classList.contains('hapus-btn')) {
@@ -159,6 +169,47 @@ function handleAksiTabel(e) {
 }
 
 // --- FUNGSI BARU UNTUK MEMBUAT AKUN SISWA ---
+
+function tampilkanModalResetPassword(authId, namaSiswa) {
+    const modal = document.getElementById('modalResetPassword');
+    document.getElementById('reset_nama_siswa').textContent = namaSiswa;
+    document.getElementById('reset_auth_id').value = authId;
+    document.getElementById('reset_password_baru').value = '';
+    modal.classList.remove('hidden');
+}
+
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const btn = document.getElementById('simpanResetBtn');
+    const authId = document.getElementById('reset_auth_id').value;
+    const passwordBaru = document.getElementById('reset_password_baru').value;
+
+    if (passwordBaru.length < 6) {
+        tampilkanNotifikasi("Password minimal 6 karakter.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = 'Memproses...';
+
+    try {
+        const { data, error } = await supa.rpc('update_user_password', {
+            user_id_to_update: authId,
+            new_password: passwordBaru
+        });
+
+        if (error) throw error;
+        
+        tampilkanNotifikasi(data, 'success');
+        document.getElementById('modalResetPassword').classList.add('hidden');
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal reset password: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Reset Password';
+    }
+}
 
 function tampilkanFormBuatAkun(idSiswa) {
     const siswa = semuaSiswaCache.find(s => s.id === idSiswa);
