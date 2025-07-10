@@ -150,21 +150,23 @@ async function handleSimpanSiswa(e) {
 // --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 function handleAksiTabel(e) {
-    if (!e.target.dataset.id) return;
+    if (!e.target.dataset.id) return; // Keluar jika yang diklik bukan elemen dengan data-id
+
     const id = e.target.dataset.id;
-	if (e.target.classList.contains('lihat-akun-btn')) {
-        const authId = e.target.dataset.authid;
-        const namaSiswa = e.target.dataset.nama;
-        tampilkanModalResetPassword(authId, namaSiswa);
-    }
+
     if (e.target.classList.contains('edit-btn')) {
         isiFormUntukEdit(id);
     } else if (e.target.classList.contains('hapus-btn')) {
-        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)? Operasi ini tidak bisa dibatalkan.')) {
-            hapusDataSiswa(id);
+        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)?')) {
+            const siswa = semuaSiswaCache.find(s => s.id === id);
+            hapusDataSiswa(id, siswa ? siswa.auth_user_id : null);
         }
     } else if (e.target.classList.contains('buat-akun-btn')) {
         tampilkanFormBuatAkun(id);
+    } else if (e.target.classList.contains('lihat-akun-btn')) {
+        const authId = e.target.dataset.authid;
+        const namaSiswa = e.target.dataset.nama;
+        tampilkanModalResetPassword(authId, namaSiswa);
     }
 }
 
