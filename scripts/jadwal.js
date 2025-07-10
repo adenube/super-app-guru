@@ -9,7 +9,25 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
     document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
     document.getElementById('tombolBatal').addEventListener('click', resetForm);
+	const toggleButton = document.getElementById('toggle-jadwal-mingguan');
+    const kontenJadwal = document.getElementById('konten-jadwal-mingguan');
+    const toggleIcon = document.getElementById('toggle-icon');
 
+    toggleButton.addEventListener('click', () => {
+        kontenJadwal.classList.toggle('hidden');
+        toggleIcon.classList.toggle('rotate-180');
+    });
+	
+	document.getElementById('tombolTambahJadwal').addEventListener('click', (e) => {
+        e.stopPropagation(); // Agar tidak trigger buka-tutup
+        tampilkanFormTambah();
+        // Pastikan kontennya terbuka saat tombol + diklik
+        if (kontenJadwal.classList.contains('hidden')) {
+            kontenJadwal.classList.remove('hidden');
+            toggleIcon.classList.add('rotate-180');
+        }
+    });
+	
     // --- INI DIA "DETAK JANTUNG"-NYA ---
     // Cek status jadwal setiap 30 detik (30000 ms)
     setInterval(updateStatusJadwalLive, 30000); 
