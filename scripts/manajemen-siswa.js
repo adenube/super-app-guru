@@ -69,8 +69,8 @@ function tambahBarisKeTabel(siswa) {
       <td class="py-3 px-4"><div class="flex space-x-2">
         <button class="edit-btn bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Edit</button>
         <button class="hapus-btn bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-sm" data-id="${siswa.id}">Hapus</button>
-        ${!siswa.auth_user_id ? `<button class="lihat-akun-btn bg-purple-500 text-white px-2 py-1 rounded-md text-xs" data-authid="${siswa.auth_user_id}" data-nama="${siswa.Nama_Lengkap}">Lihat Akun</button>` : `<button class="buat-akun-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>` : `<span class="text-xs text-green-600 font-semibold px-2 py-1">✓ Akun Ada</span>`}
-      
+        ${!siswa.auth_user_id ? `<button class="lihat-akun-btn bg-purple-500 text-white px-2 py-1 rounded-md text-xs" data-authid="${siswa.auth_user_id}" data-nama="${siswa.Nama_Lengkap}">Lihat Akun</button>` 
+          : `<button class="buat-akun-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>`}
       </div></td>`;
     tabelBody.appendChild(row);
 }
