@@ -5,34 +5,37 @@ const rowsPerPage = 5;
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Pasang semua "kabel" ke elemen HTML yang sudah pasti ada
-    document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
+    muatDataSiswa();
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
-
-    // Setelah semua siap, baru muat data
-    muatDataSiswa();
+    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
+    document.getElementById('akun_batal_btn').addEventListener('click', () => {
+        document.getElementById('modalBuatAkun').classList.add('hidden');
+    });
+	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
+    document.getElementById('batalResetBtn').addEventListener('click', () => {
+        document.getElementById('modalResetPassword').classList.add('hidden');
+    });
 });
 
 // --- FUNGSI-FUNGSI ---
 
 async function muatDataSiswa(forceReload = false) {
     const emptyState = document.getElementById('emptyState');
-    emptyState.innerHTML = `<p>Memuat data...</p>`;
-    emptyState.classList.remove('hidden');
+    if(emptyState) { emptyState.innerHTML = `<p>Memuat data...</p>`; emptyState.classList.remove('hidden'); }
     try {
         const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         semuaSiswaCache = data;
-        if (forceReload) currentPage = 1;
+        currentPage = forceReload ? 1 : currentPage;
         tampilkanHalaman(currentPage);
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat data: ' + error.message, 'error');
-        emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
+        if(emptyState) emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
     }
 }
 
@@ -42,10 +45,9 @@ function tampilkanHalaman(page) {
     const emptyState = document.getElementById('emptyState');
     tabelBody.innerHTML = '';
     if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
-        emptyState.classList.remove('hidden');
-        emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
+        if(emptyState) { emptyState.classList.remove('hidden'); emptyState.innerHTML = `<p>Belum ada data murid.</p>`; }
     } else {
-        emptyState.classList.add('hidden');
+        if(emptyState) emptyState.classList.add('hidden');
         const startIndex = (page - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         const dataHalamanIni = semuaSiswaCache.slice(startIndex, endIndex);
@@ -355,8 +357,7 @@ function resetFormSiswa() {
     const tombolSimpan = document.getElementById('tombolSimpanSiswa');
     tombolSimpan.textContent = 'Simpan Siswa Baru';
     tombolSimpan.disabled = false;
-    // Sembunyikan form setelah reset
-    document.getElementById('form-container-siswa').classList.add('hidden');
+    document.getElementById('tombolBatalSiswa').classList.add('hidden');
 }
 
 function tampilkanNotifikasi(message, type) {
@@ -481,12 +482,4 @@ async function hapusUserAuth(auth_id) {
             tampilkanNotifikasi("Gagal hapus user: " + e.message, 'error');
         }
     }
-}
-
-function tampilkanFormTambah() {
-    resetFormSiswa(); // Pastikan form bersih
-    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
-    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
-    document.getElementById('form-container-siswa').classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
