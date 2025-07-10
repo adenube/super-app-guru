@@ -5,21 +5,28 @@ const rowsPerPage = 5;
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
-    muatDataSiswa();
+    // Listener untuk tombol utama
+    document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
+    
+    // Listener untuk form
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
+    
+    // Listener untuk aksi di tabel dan paginasi
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
+    
+    // Listener untuk fitur impor
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
+
+    // Listener untuk modal
     document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
-    document.getElementById('akun_batal_btn').addEventListener('click', () => {
-        document.getElementById('modalBuatAkun').classList.add('hidden');
-    });
+    document.getElementById('akun_batal_btn').addEventListener('click', () => document.getElementById('modalBuatAkun').classList.add('hidden'));
 	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
-    document.getElementById('batalResetBtn').addEventListener('click', () => {
-        document.getElementById('modalResetPassword').classList.add('hidden');
-    });
+    document.getElementById('batalResetBtn').addEventListener('click', () => document.getElementById('modalResetPassword').classList.add('hidden'));
+
+    muatDataSiswa(); // Muat data awal
 });
 
 // --- FUNGSI-FUNGSI ---
@@ -360,6 +367,15 @@ function resetFormSiswa() {
     document.getElementById('tombolBatalSiswa').classList.add('hidden');
 }
 
+function resetFormSiswa(hide = true) {
+    document.getElementById('formTambahMurid').reset();
+    document.getElementById('ID_Siswa').value = '';
+    document.getElementById('tombolSimpanSiswa').disabled = false;
+    if (hide) {
+        document.getElementById('form-container-siswa').classList.add('hidden');
+    }
+}
+
 function tampilkanNotifikasi(message, type) {
     const notification = document.createElement('div');
     const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-yellow-500');
@@ -482,4 +498,12 @@ async function hapusUserAuth(auth_id) {
             tampilkanNotifikasi("Gagal hapus user: " + e.message, 'error');
         }
     }
+}
+
+function tampilkanFormTambah() {
+    resetFormSiswa(false); // Reset tapi jangan sembunyikan
+    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
+    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
+    document.getElementById('form-container-siswa').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
