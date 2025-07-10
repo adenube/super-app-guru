@@ -20,43 +20,48 @@
 <body class="min-h-screen bg-gray-100">
     
     <nav class="bg-white shadow-md">
-	  <div class="max-w-7xl mx-auto px-4">
-		<div class="flex justify-between">
-		  <div class="flex items-center">
-			<a href="index.html" class="flex items-center py-4 px-2 text-gray-700">
-			  <span class="font-bold">SuperApp Guru</span>
-			</a>
-		  </div>
-		  <div class="hidden lg:flex items-center space-x-1">
-			<a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
-			<a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
-			<a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
-			<a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
-			<a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
-			<a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
-			<a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
-		  </div>
-		  <div class="flex items-center space-x-4">
-			<button id="logout-button" class="hidden md:block py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button>
-			<div class="lg:hidden">
-			  <button id="mobile-menu-button" class="py-4 px-2">
-				<svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-			  </button>
+		<div class="max-w-7xl mx-auto px-4">
+			<div class="flex justify-between h-16">
+				<div class="flex space-x-4">
+					<div>
+						<a href="index.html" class="flex items-center h-full px-2 text-gray-700">
+							<span class="font-bold">SuperApp Guru</span>
+						</a>
+					</div>
+					<div class="hidden lg:flex items-center space-x-1">
+						<a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
+						<a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
+						<a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
+						<a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
+						<a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
+						<a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
+						<a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
+					</div>
+				</div>
+
+				<div class="flex items-center">
+					<button id="logout-button" class="hidden lg:block py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button>
+					<div class="lg:hidden ml-4">
+						<button id="mobile-menu-button" class="p-2">
+							<svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						</button>
+					</div>
+				</div>
 			</div>
-		  </div>
 		</div>
-	  </div>
-	  <div id="mobile-menu" class="hidden lg:hidden">
-		<a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
-		<a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
-		<a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
-		<a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
-		<a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
-		<a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
-		<a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
-		<hr>
-		<button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
-	  </div>
+		<div id="mobile-menu" class="hidden lg:hidden">
+			<a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
+			<a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
+			<a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
+			<a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
+			<a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
+			<a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
+			<a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
+			<hr/>
+			<button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
+		</div>
 	</nav>
 
     <div class="max-w-7xl mx-auto py-8 px-4">
