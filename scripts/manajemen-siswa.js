@@ -207,12 +207,20 @@ async function handleSimpanAkunSiswa(e) {
 function handleAksiTabel(e) {
     if (!e.target.dataset.id) return;
     const id = e.target.dataset.id;
+
     if (e.target.classList.contains('edit-btn')) {
         isiFormUntukEdit(id);
     } else if (e.target.classList.contains('hapus-btn')) {
+        const siswa = semuaSiswaCache.find(s => s.id === id);
         if (confirm('Yakin ingin menghapus siswa ini?')) {
-            hapusDataSiswa(id);
+            hapusDataSiswa(id, siswa ? siswa.auth_user_id : null);
         }
+    } else if (e.target.classList.contains('buat-akun-btn')) {
+        tampilkanFormBuatAkun(id);
+    } else if (e.target.classList.contains('lihat-akun-btn')) {
+        const authId = e.target.dataset.authid;
+        const namaSiswa = e.target.dataset.nama;
+        tampilkanModalResetPassword(authId, namaSiswa);
     }
 }
 
