@@ -3,10 +3,6 @@ let semuaSiswaCache = [];
 let currentPage = 1;
 const rowsPerPage = 5;
 
-let semuaSiswaCache = [];
-let currentPage = 1;
-const rowsPerPage = 5;
-
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
