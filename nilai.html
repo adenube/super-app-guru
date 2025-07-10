@@ -72,21 +72,7 @@
 
     <div class="max-w-7xl mx-auto py-8 px-4">
         <h1 class="text-3xl font-bold text-blue-800 mb-8">Manajemen Penilaian Siswa</h1>
-		<div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold text-green-700 mb-4 border-b pb-2">Import Nilai Kognitif (dari CSV)</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="fileInput" class="block text-sm font-medium text-gray-700">Pilih File CSV</label>
-                    <p class="text-xs text-gray-500 mb-2">Format: Nama_Lengkap, Kelas, Topik_Bahasan, Aspek_Yang_Dinilai, Nilai_Skor, Umpan_Balik_Siswa</p>
-                    <input type="file" id="fileInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                </div>
-                <button id="tombolImport" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>
-                    Import & Simpan Nilai
-                </button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+		<div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2">Form Penilaian Karakter/Sikap</h2>
                 <form id="formNilai" class="space-y-4">
@@ -111,6 +97,20 @@
                 </div>
                 <div id="riwayatNilaiContainer" class="space-y-3"></div>
                 <div id="riwayatPaginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
+            </div>
+        </div>
+		<div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-green-700 mb-4 border-b pb-2">Import Nilai Kognitif (dari CSV)</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="fileInput" class="block text-sm font-medium text-gray-700">Pilih File CSV</label>
+                    <p class="text-xs text-gray-500 mb-2">Format: Nama_Lengkap, Kelas, Topik_Bahasan, Aspek_Yang_Dinilai, Nilai_Skor, Umpan_Balik_Siswa</p>
+                    <input type="file" id="fileInput" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                </div>
+                <button id="tombolImport" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>
+                    Import & Simpan Nilai
+                </button>
             </div>
         </div>
     </div>
