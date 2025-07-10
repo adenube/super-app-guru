@@ -105,10 +105,7 @@
 
     </div>
     
-    <script src="scripts/auth.js"></script>
-	<script src="scripts/main.js"></script> <script src="scripts/manajemen-siswa.js"></script>
-	
-	<div id="modalBuatAkun" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
+    <div id="modalBuatAkun" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
             <h3 class="text-xl font-bold text-blue-700 mb-4">Buat Akun Login Siswa</h3>
             <form id="formBuatAkunSiswa" class="space-y-4">
@@ -132,5 +129,26 @@
             </form>
         </div>
     </div>
+	<div id="modalResetPassword" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
+		<div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
+			<h3 class="text-xl font-bold text-blue-700 mb-4">Kelola Akun Siswa</h3>
+			<p class="text-lg font-semibold" id="reset_nama_siswa"></p>
+			<p class="text-xs text-gray-500 mb-4">Ganti password jika siswa lupa.</p>
+			<form id="formResetPassword" class="space-y-4">
+				<input type="hidden" id="reset_auth_id">
+				<div>
+					<label for="reset_password_baru" class="block text-sm font-medium text-gray-700">Password Baru</label>
+					<input type="text" id="reset_password_baru" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+				</div>
+				<div class="flex items-center justify-end gap-4 pt-4">
+					<button type="button" id="batalResetBtn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md">Batal</button>
+					<button type="submit" id="simpanResetBtn" class="bg-yellow-500 text-white py-2 px-4 rounded-md">Reset Password</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+<script src="scripts/auth.js"></script>
+<script src="scripts/main.js"></script>
+<script src="scripts/manajemen-siswa.js"></script>
 </body>
-</html>
