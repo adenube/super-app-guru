@@ -141,6 +141,50 @@ async function handleSimpanSiswa(e) {
     }
 }
 
+async function handleSimpanAkunSiswa(e) {
+    e.preventDefault();
+    const btn = document.getElementById('akun_simpan_btn');
+    btn.disabled = true;
+    btn.innerHTML = 'Membuat...';
+
+    const idSiswa = document.getElementById('akun_siswa_id').value;
+    const email = document.getElementById('akun_email').value;
+    const password = document.getElementById('akun_password').value;
+
+    try {
+        // 1. Buat user di Supabase Auth
+        const { data: authData, error: authError } = await supa.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    role: 'siswa' // Menyimpan role di metadata
+                }
+            }
+        });
+
+        if (authError) throw authError;
+
+        // 2. Jika berhasil, update kolom auth_user_id di tabel Siswa
+        const { error: updateError } = await supa
+            .from('Siswa')
+            .update({ auth_user_id: authData.user.id })
+            .eq('id', idSiswa);
+
+        if (updateError) throw updateError;
+
+        tampilkanNotifikasi(`Akun untuk ${email} berhasil dibuat!`, 'success');
+        document.getElementById('modalBuatAkun').classList.add('hidden');
+        muatDataSiswa(); // Refresh tabel untuk menghilangkan tombol
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal membuat akun: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Buat Akun Sekarang';
+    }
+}
+
 function handleAksiTabel(e) {
     if (!e.target.dataset.id) return;
     const id = e.target.dataset.id;
