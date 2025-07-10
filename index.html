@@ -91,6 +91,19 @@
 
         <div class="bg-white border-l-4 border-green-400 p-6 rounded-lg shadow-lg mt-8">
             </div>
+		<div class="bg-white border-l-4 border-green-400 p-6 rounded-lg shadow-lg mt-8">
+            <h2 class="text-xl font-semibold mb-4 text-green-800">Import Siswa dari CSV</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Format file CSV harus memiliki header: <strong>Nomor_Induk, Nama_Lengkap, Kelas, Jenis_Kelamin</strong>.
+                <a href="#" id="downloadContohSiswa" class="text-blue-600 hover:underline">Download contoh format</a>.
+            </p>
+            <div class="flex items-center space-x-4">
+                <input type="file" id="fileInputSiswa" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
+                <button id="tombolImportSiswa" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                    Import
+                </button>
+            </div>
+        </div>
     </div>
     
     <script src="scripts/auth.js"></script>
