@@ -4,34 +4,20 @@ let currentPage = 1;
 const rowsPerPage = 5;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Listeners for the main form
+    document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
-    document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
-
-    // Listener for the table (handles Edit, Hapus, Buat Akun)
+    document.getElementById('tombolBatalSiswa').addEventListener('click', () => {
+        document.getElementById('modalSiswa').classList.add('hidden');
+    });
+    
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
-
-    // Listener for pagination
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
-
-    // Listeners for the import feature
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
     
-    // Listeners for the "Buat Akun" modal
-    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
-    document.getElementById('akun_batal_btn').addEventListener('click', () => {
-        document.getElementById('modalBuatAkun').classList.add('hidden');
-    });
-
-    // Listeners for the "Reset Password" modal
-	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
-    document.getElementById('batalResetBtn').addEventListener('click', () => {
-        document.getElementById('modalResetPassword').classList.add('hidden');
-    });
-
-    // Load initial data
-    muatDataSiswa();
+    // Kita akan tambahkan listener untuk modal akun nanti
+    
+    muatDataSiswa();
 });
 
 async function handleResetPassword(e) {
@@ -233,7 +219,7 @@ function handleAksiTabel(e) {
 function isiFormUntukEdit(id) {
     const siswa = semuaSiswaCache.find(s => s.id === id);
     if (siswa) {
-        document.getElementById('form-container-siswa').classList.remove('hidden');
+        document.getElementById('modalSiswa').classList.remove('hidden');
         document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
         document.getElementById('ID_Siswa').value = siswa.id;
         document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
@@ -241,8 +227,6 @@ function isiFormUntukEdit(id) {
         document.getElementById('Kelas').value = siswa.Kelas;
         document.querySelector(`input[name="Jenis_Kelamin"][value="${siswa.Jenis_Kelamin}"]`).checked = true;
         document.getElementById('tombolSimpanSiswa').textContent = 'Update Data';
-        document.getElementById('tombolBatalSiswa').classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -258,10 +242,11 @@ async function hapusDataSiswa(id) {
 }
 
 function tampilkanFormTambah() {
-    document.getElementById('form-container-siswa').classList.remove('hidden');
+    document.getElementById('modalSiswa').classList.remove('hidden');
     document.getElementById('formSiswaTitle').textContent = 'Form Tambah Murid Baru';
-    document.getElementById('tombolBatalSiswa').classList.remove('hidden');
-    resetFormSiswa(false);
+    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
+    document.getElementById('formTambahMurid').reset();
+    document.getElementById('ID_Siswa').value = '';
 }
 
 function resetFormSiswa(hide = true) {
