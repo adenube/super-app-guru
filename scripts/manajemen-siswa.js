@@ -182,12 +182,35 @@ function handleAksiTabel(e) {
 
 // --- FUNGSI BARU UNTUK MEMBUAT AKUN SISWA ---
 
-function tampilkanModalResetPassword(authId, namaSiswa) {
+// GANTI FUNGSI LAMA DENGAN VERSI ASYNC BARU INI
+async function tampilkanModalResetPassword(authId, namaSiswa) {
     const modal = document.getElementById('modalResetPassword');
-    document.getElementById('reset_nama_siswa').textContent = namaSiswa;
+    const namaSiswaElem = document.getElementById('reset_nama_siswa');
+    const emailSiswaElem = document.getElementById('reset_email_siswa');
+    
+    // Tampilkan modal dengan status loading
+    namaSiswaElem.textContent = namaSiswa;
+    emailSiswaElem.textContent = 'Memuat email...';
     document.getElementById('reset_auth_id').value = authId;
     document.getElementById('reset_password_baru').value = '';
     modal.classList.remove('hidden');
+
+    try {
+        // Panggil fungsi SQL kita di Supabase
+        const { data, error } = await supa.rpc('get_user_details', { user_id_to_get: authId });
+        if (error) throw error;
+        
+        // Tampilkan email jika berhasil didapatkan
+        if (data && data.email) {
+            emailSiswaElem.textContent = data.email;
+        } else {
+            emailSiswaElem.textContent = 'Email tidak ditemukan.';
+        }
+
+    } catch (e) {
+        tampilkanNotifikasi('Gagal memuat detail akun: ' + e.message, 'error');
+        emailSiswaElem.textContent = 'Gagal memuat.';
+    }
 }
 
 async function handleResetPassword(e) {
