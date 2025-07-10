@@ -9,24 +9,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
     document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
     document.getElementById('tombolBatal').addEventListener('click', resetForm);
-	const toggleButton = document.getElementById('toggle-jadwal-mingguan');
-    const kontenJadwal = document.getElementById('konten-jadwal-mingguan');
-    const toggleIcon = document.getElementById('toggle-icon');
+	//const toggleButton = document.getElementById('toggle-jadwal-mingguan');
+    //const kontenJadwal = document.getElementById('konten-jadwal-mingguan');
+    //const toggleIcon = document.getElementById('toggle-icon');
 
-    toggleButton.addEventListener('click', () => {
-        kontenJadwal.classList.toggle('hidden');
-        toggleIcon.classList.toggle('rotate-180');
-    });
+    //toggleButton.addEventListener('click', () => {
+    //    kontenJadwal.classList.toggle('hidden');
+    //    toggleIcon.classList.toggle('rotate-180');
+    //});
 	
-	document.getElementById('tombolTambahJadwal').addEventListener('click', (e) => {
-        e.stopPropagation(); // Agar tidak trigger buka-tutup
-        tampilkanFormTambah();
-        // Pastikan kontennya terbuka saat tombol + diklik
-        if (kontenJadwal.classList.contains('hidden')) {
-            kontenJadwal.classList.remove('hidden');
-            toggleIcon.classList.add('rotate-180');
-        }
-    });
+	//document.getElementById('tombolTambahJadwal').addEventListener('click', (e) => {
+    //    e.stopPropagation(); // Agar tidak trigger buka-tutup
+    //    tampilkanFormTambah();
+    //    // Pastikan kontennya terbuka saat tombol + diklik
+    //    if (kontenJadwal.classList.contains('hidden')) {
+    //        kontenJadwal.classList.remove('hidden');
+    //        toggleIcon.classList.add('rotate-180');
+    //    }
+    //});
 	
     // --- INI DIA "DETAK JANTUNG"-NYA ---
     // Cek status jadwal setiap 30 detik (30000 ms)
@@ -45,80 +45,56 @@ async function muatJadwalHariIni() {
     const container = document.getElementById('jadwal-harian-container');
     const viewKosong = document.getElementById('jadwal-kosong');
     container.innerHTML = '<p class="text-center text-gray-500">Mencari jadwal...</p>';
-
     const namaHariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' });
-
     try {
         const { data, error } = await supa.from('Jadwal').select('*').eq('Hari', namaHariIni).order('Jam_Mulai');
         if (error) throw error;
-        
-        jadwalHarianCache = data; // Simpan data ke cache
-        gambarJadwalHarian(); // Gambar jadwal dari cache
-        
+        jadwalHarianCache = data;
+        gambarJadwalHarian();
     } catch(e) {
-        container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal hari ini: ${e.message}</p>`;
+        container.innerHTML = `<p class="text-center text-red-500">Gagal memuat jadwal hari ini.</p>`;
     }
 }
 
 function gambarJadwalHarian() {
     const container = document.getElementById('jadwal-harian-container');
     const viewKosong = document.getElementById('jadwal-kosong');
-    const waktuSekarang = new Date().toTimeString().substring(0, 5);
-
     container.innerHTML = '';
-    
     if (jadwalHarianCache.length === 0) {
         viewKosong.classList.remove('hidden');
         return;
     }
-
     viewKosong.classList.add('hidden');
     jadwalHarianCache.forEach(jadwal => {
         const card = document.createElement('div');
-        const jamSelesai = jadwal.Jam_Selesai.substring(0, 5);
-        const isPast = waktuSekarang > jamSelesai;
-
         card.id = `jadwal-card-${jadwal.id}`;
-        // Simpan jam selesai di data-attribute untuk dicek nanti
-        card.dataset.jamSelesai = jamSelesai; 
-        
-        card.className = `schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6 ${isPast ? 'is-past' : ''}`;
-        
-        const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
-
-        card.innerHTML = `
-            <div class="text-center flex-shrink-0">
-                <p class="text-2xl font-bold">${jamMulai}</p>
-                <p class="text-sm opacity-80">s/d</p>
-                <p class="text-lg font-medium">${jamSelesai}</p>
-            </div>
-            <div class="border-l-2 border-white/30 pl-6 flex-grow">
-                <p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p>
-                <p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p>
-            </div>
-            <div class="status-container">
-                ${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}
-            </div>
-        `;
+        card.dataset.jamSelesai = jadwal.Jam_Selesai;
+        card.className = `schedule-card rounded-lg shadow-lg p-6 flex items-center space-x-6`;
         container.appendChild(card);
     });
+    updateStatusJadwalLive(); // Panggil sekali untuk set status awal
 }
 
 // FUNGSI BARU UNTUK UPDATE TAMPILAN SECARA LIVE
 function updateStatusJadwalLive() {
-    const waktuSekarang = new Date().toTimeString().substring(0, 5);
-    const semuaKartu = document.querySelectorAll('.schedule-card-mini'); // Pastikan nama kelas ini benar
-
-    semuaKartu.forEach(card => {
-        if (!card.classList.contains('is-past')) {
+    const waktuSekarang = new Date().toTimeString().substring(0, 8);
+    jadwalHarianCache.forEach(jadwal => {
+        const card = document.getElementById(`jadwal-card-${jadwal.id}`);
+        if (card) {
             const jamSelesai = card.dataset.jamSelesai;
-            if (waktuSekarang > jamSelesai) {
+            const isPast = waktuSekarang > jamSelesai;
+            
+            if (isPast) {
                 card.classList.add('is-past');
-                const statusContainer = card.querySelector('.status-container');
-                if (statusContainer) {
-                    statusContainer.innerHTML = '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>';
-                }
+            } else {
+                card.classList.remove('is-past');
             }
+            
+            const jamMulai = jadwal.Jam_Mulai.substring(0, 5);
+            card.innerHTML = `
+                <div class="text-center flex-shrink-0"><p class="text-2xl font-bold">${jamMulai}</p><p class="text-sm opacity-80">s/d</p><p class="text-lg font-medium">${jamSelesai.substring(0,5)}</p></div>
+                <div class="border-l-2 border-white/30 pl-6 flex-grow"><p class="text-2xl font-bold">${jadwal.Mata_Pelajaran}</p><p class="text-lg font-light opacity-90">Kelas ${jadwal.Kelas}</p></div>
+                <div class="status-container">${isPast ? '<span class="text-xs font-semibold bg-white/30 py-1 px-2 rounded-full">SELESAI</span>' : ''}</div>`;
         }
     });
 }
