@@ -5,38 +5,34 @@ const rowsPerPage = 5;
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
-    muatDataSiswa();
+    // Pasang semua "kabel" ke elemen HTML yang sudah pasti ada
+    document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
-	document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
-    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
-    document.getElementById('akun_batal_btn').addEventListener('click', () => {
-        document.getElementById('modalBuatAkun').classList.add('hidden');
-    });
-	document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
-    document.getElementById('batalResetBtn').addEventListener('click', () => {
-        document.getElementById('modalResetPassword').classList.add('hidden');
-    });
+
+    // Setelah semua siap, baru muat data
+    muatDataSiswa();
 });
 
 // --- FUNGSI-FUNGSI ---
 
 async function muatDataSiswa(forceReload = false) {
     const emptyState = document.getElementById('emptyState');
-    if(emptyState) { emptyState.innerHTML = `<p>Memuat data...</p>`; emptyState.classList.remove('hidden'); }
+    emptyState.innerHTML = `<p>Memuat data...</p>`;
+    emptyState.classList.remove('hidden');
     try {
         const { data, error } = await supa.from('Siswa').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         semuaSiswaCache = data;
-        currentPage = forceReload ? 1 : currentPage;
+        if (forceReload) currentPage = 1;
         tampilkanHalaman(currentPage);
     } catch (error) {
         tampilkanNotifikasi('Gagal memuat data: ' + error.message, 'error');
-        if(emptyState) emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
+        emptyState.innerHTML = `<p class="text-red-500">Gagal memuat data.</p>`;
     }
 }
 
@@ -46,9 +42,10 @@ function tampilkanHalaman(page) {
     const emptyState = document.getElementById('emptyState');
     tabelBody.innerHTML = '';
     if (!semuaSiswaCache || semuaSiswaCache.length === 0) {
-        if(emptyState) { emptyState.classList.remove('hidden'); emptyState.innerHTML = `<p>Belum ada data murid.</p>`; }
+        emptyState.classList.remove('hidden');
+        emptyState.innerHTML = `<p>Belum ada data murid.</p>`;
     } else {
-        if(emptyState) emptyState.classList.add('hidden');
+        emptyState.classList.add('hidden');
         const startIndex = (page - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         const dataHalamanIni = semuaSiswaCache.slice(startIndex, endIndex);
@@ -316,7 +313,8 @@ async function handleSimpanAkunSiswa(e) {
 function isiFormUntukEdit(id) {
     const siswa = semuaSiswaCache.find(s => s.id === id);
     if (siswa) {
-        document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
+        document.getElementById('form-container-siswa').classList.remove('hidden');
+		document.getElementById('formSiswaTitle').textContent = "Edit Data Murid";
         document.getElementById('ID_Siswa').value = siswa.id;
         document.getElementById('Nomor_Induk').value = siswa.Nomor_Induk;
         document.getElementById('Nama_Lengkap').value = siswa.Nama_Lengkap;
@@ -351,15 +349,13 @@ async function hapusDataSiswa(id) {
     }
 }
 
-function resetFormSiswa() {
-    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
+function resetFormSiswa(hide = true) {
     document.getElementById('formTambahMurid').reset();
     document.getElementById('ID_Siswa').value = '';
-    const tombolSimpan = document.getElementById('tombolSimpanSiswa');
-    tombolSimpan.textContent = 'Simpan Siswa Baru';
-    tombolSimpan.disabled = false;
-    // Sembunyikan form setelah reset
-    document.getElementById('form-container-siswa').classList.add('hidden');
+    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
+    if (hide) {
+        document.getElementById('form-container-siswa').classList.add('hidden');
+    }
 }
 
 function tampilkanNotifikasi(message, type) {
@@ -378,13 +374,12 @@ function tampilkanNotifikasi(message, type) {
 // --- FUNGSI BARU UNTUK DOWNLOAD CONTOH FORMAT ---
 function handleDownloadContoh(e) {
     e.preventDefault();
-    const csvContent = "Nomor_Induk,Nama_Lengkap,Kelas,Jenis_Kelamin\n12345,Ahmad Luthfi,7A,Laki-laki\n12346,Bunga Citra,7B,Perempuan";
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const csvContent = "Nomor_Induk,Nama_Lengkap,Kelas,Jenis_Kelamin\n12345,Ahmad Luthfi,7A,Laki-laki";
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", "contoh_import_siswa.csv");
-    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -487,9 +482,8 @@ async function hapusUserAuth(auth_id) {
 }
 
 function tampilkanFormTambah() {
-    resetFormSiswa(); // Pastikan form bersih
-    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
-    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
     document.getElementById('form-container-siswa').classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('formSiswaTitle').textContent = 'Form Tambah Murid Baru';
+    document.getElementById('tombolBatalSiswa').classList.remove('hidden');
+    resetFormSiswa(false); // Reset tanpa menyembunyikan
 }
