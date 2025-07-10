@@ -147,23 +147,27 @@ async function handleSimpanSiswa(e) {
 }
 
 // GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
-// --- FUNGSI AKSI TABEL YANG DIPERBAIKI ---
-// GANTI FUNGSI HANDLEAKSITABEL YANG LAMA DENGAN VERSI BARU INI
 function handleAksiTabel(e) {
-    if (!e.target.dataset.id) return; // Keluar jika yang diklik bukan elemen dengan data-id
+    if (!e.target.dataset.id) {
+        // Jika yang diklik bukan elemen yang punya data-id, abaikan
+        return; 
+    }
 
     const id = e.target.dataset.id;
 
     if (e.target.classList.contains('edit-btn')) {
         isiFormUntukEdit(id);
-    } else if (e.target.classList.contains('hapus-btn')) {
-        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)?')) {
+    } 
+    else if (e.target.classList.contains('hapus-btn')) {
+        if (confirm('Yakin ingin menghapus siswa ini beserta akun loginnya (jika ada)? Operasi ini tidak bisa dibatalkan.')) {
             const siswa = semuaSiswaCache.find(s => s.id === id);
             hapusDataSiswa(id, siswa ? siswa.auth_user_id : null);
         }
-    } else if (e.target.classList.contains('buat-akun-btn')) {
+    } 
+    else if (e.target.classList.contains('buat-akun-btn')) {
         tampilkanFormBuatAkun(id);
-    } else if (e.target.classList.contains('lihat-akun-btn')) {
+    } 
+    else if (e.target.classList.contains('lihat-akun-btn')) {
         const authId = e.target.dataset.authid;
         const namaSiswa = e.target.dataset.nama;
         tampilkanModalResetPassword(authId, namaSiswa);
