@@ -1,32 +1,27 @@
 let jadwalHarianCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Jalankan fungsi-fungsi awal
     tampilkanHeaderTanggal();
     muatJadwalHariIni();
     muatSemuaJadwal();
     
-    // Pasang semua event listener
     document.getElementById('tombolTambahJadwal').addEventListener('click', (e) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         tampilkanFormTambah();
     });
     document.getElementById('formJadwal').addEventListener('submit', handleSimpanJadwal);
     document.getElementById('jadwal-table-body').addEventListener('click', handleAksiJadwal);
     document.getElementById('tombolBatal').addEventListener('click', resetForm);
 
-    // Listener untuk buka-tutup
     const toggleButton = document.getElementById('toggle-jadwal-mingguan');
     const kontenJadwal = document.getElementById('konten-jadwal-mingguan');
     const toggleIcon = document.getElementById('toggle-icon');
-
     toggleButton.addEventListener('click', () => {
         kontenJadwal.classList.toggle('hidden');
         toggleIcon.classList.toggle('rotate-180');
     });
 
-    // Timer untuk update status jadwal live
-    setInterval(updateStatusJadwalLive, 30000); 
+    setInterval(updateStatusJadwalLive, 30000);
 });
 
 function tampilkanHeaderTanggal() {
@@ -98,6 +93,7 @@ function updateStatusJadwalLive() {
 
 async function muatSemuaJadwal() {
     const tbody = document.getElementById('jadwal-table-body');
+	if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4">Memuat jadwal...</td></tr>';
     try {
         const { data, error } = await supa.from('Jadwal').select('*').order('created_at');
