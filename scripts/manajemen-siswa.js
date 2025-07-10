@@ -48,13 +48,14 @@ function tampilkanHalaman(page) {
     gambarTombolPaginasi();
 }
 
+// GANTI FUNGSI TAMBAHBARISKETABEL DENGAN VERSI BARU INI
 function tambahBarisKeTabel(siswa) {
     const tabelBody = document.getElementById('tabelSiswaBody');
     const row = document.createElement('tr');
     row.id = `siswa-${siswa.id}`;
     row.className = 'border-t hover:bg-gray-50';
 
-    // --- INI LOGIKA YANG DIPERBAIKI ---
+    // --- INI LOGIKA YANG DIPERBAIKI UNTUK MENAMPILKAN SEMUA TOMBOL ---
     const tombolAkun = siswa.auth_user_id 
         ? `<button class="lihat-akun-btn bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}" data-authid="${siswa.auth_user_id}" data-nama="${siswa.Nama_Lengkap}">Lihat Akun</button>`
         : `<button class="buat-akun-btn bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs" data-id="${siswa.id}">Buat Akun</button>`;
