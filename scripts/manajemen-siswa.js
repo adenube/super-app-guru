@@ -5,18 +5,44 @@ const rowsPerPage = 5;
 
 // --- EVENT LISTENER UTAMA ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Pasang semua "kabel" ke elemen HTML yang sudah pasti ada
-    document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
+    renderLayout(); // Panggil fungsi untuk menggambar kerangka
+    muatDataSiswa(); // Muat data awal
+});
+
+function renderLayout() {
+    const container = document.getElementById('content-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-6 order-2 lg:order-1">
+                <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle">Form Tambah Murid Baru</h2>
+                <form id="formTambahMurid" class="space-y-4">
+                    </form>
+            </div>
+            <div class="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 order-1 lg:order-2">
+                <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Daftar Murid Terdaftar</h2>
+                <div class="overflow-x-auto"><table class="min-w-full bg-white"><thead class="bg-gray-100">...</thead><tbody id="tabelSiswaBody"></tbody></table></div>
+                <div id="emptyState" class="text-center py-8 text-gray-500"><p>Memuat data...</p></div>
+                <div id="paginationControls" class="flex justify-center items-center space-x-1 mt-6"></div>
+            </div>
+        </div>
+        <div class="md:col-span-2 bg-white border-l-4 border-green-400 p-6 rounded-lg shadow-lg mt-8">
+            </div>
+    `;
+    
+    // Pasang semua event listener SETELAH layout digambar
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
     document.getElementById('downloadContohSiswa').addEventListener('click', handleDownloadContoh);
-
-    // Setelah semua siap, baru muat data
-    muatDataSiswa();
-});
+    document.getElementById('formBuatAkunSiswa').addEventListener('submit', handleSimpanAkunSiswa);
+    document.getElementById('akun_batal_btn').addEventListener('click', () => { document.getElementById('modalBuatAkun').classList.add('hidden'); });
+    document.getElementById('formResetPassword').addEventListener('submit', handleResetPassword);
+    document.getElementById('batalResetBtn').addEventListener('click', () => { document.getElementById('modalResetPassword').classList.add('hidden'); });
+}
 
 // --- FUNGSI-FUNGSI ---
 
