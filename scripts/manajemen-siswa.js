@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     muatDataSiswa();
     document.getElementById('formTambahMurid').addEventListener('submit', handleSimpanSiswa);
     document.getElementById('tombolBatalSiswa').addEventListener('click', resetFormSiswa);
+	document.getElementById('tombolTambahSiswa').addEventListener('click', tampilkanFormTambah);
     document.getElementById('tabelSiswaBody').addEventListener('click', handleAksiTabel);
     document.getElementById('paginationControls').addEventListener('click', handlePaginasi);
     document.getElementById('tombolImportSiswa').addEventListener('click', handleImportSiswa);
@@ -357,7 +358,8 @@ function resetFormSiswa() {
     const tombolSimpan = document.getElementById('tombolSimpanSiswa');
     tombolSimpan.textContent = 'Simpan Siswa Baru';
     tombolSimpan.disabled = false;
-    document.getElementById('tombolBatalSiswa').classList.add('hidden');
+    // Sembunyikan form setelah reset
+    document.getElementById('form-container-siswa').classList.add('hidden');
 }
 
 function tampilkanNotifikasi(message, type) {
@@ -482,4 +484,12 @@ async function hapusUserAuth(auth_id) {
             tampilkanNotifikasi("Gagal hapus user: " + e.message, 'error');
         }
     }
+}
+
+function tampilkanFormTambah() {
+    resetFormSiswa(); // Pastikan form bersih
+    document.getElementById('formSiswaTitle').textContent = "Form Tambah Murid Baru";
+    document.getElementById('tombolSimpanSiswa').textContent = 'Simpan Siswa Baru';
+    document.getElementById('form-container-siswa').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
