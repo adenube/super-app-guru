@@ -20,37 +20,49 @@
 <body class="min-h-screen bg-gray-100">
     
     <nav class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between h-16">
-          <div class="flex space-x-4 items-center">
-            <div><a href="index.html" class="flex items-center h-full px-2 text-gray-700"><span class="font-bold">SuperApp Guru</span></a></div>
-            <div class="hidden md:flex items-center space-x-1">
-              <a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
-              <a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
-              <a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
-              <a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
-              <a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
-              <a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
-              <a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
-            </div>
-          </div>
-          <div class="flex items-center">
-            <div class="hidden md:flex items-center"><button id="logout-button" class="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button></div>
-            <div class="md:hidden flex items-center"><button id="mobile-menu-button" class="p-2"><svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button></div>
-          </div>
-        </div>
-      </div>
-      <div id="mobile-menu" class="hidden md:hidden">
-        <a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
-        <a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
-        <a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
-        <a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
-        <a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
-        <a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
-        <a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
-        <hr/><button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
-      </div>
-    </nav>
+		<div class="max-w-7xl mx-auto px-4">
+			<div class="flex justify-between h-16">
+				<div class="flex space-x-4">
+					<div>
+						<a href="index.html" class="flex items-center h-full px-2 text-gray-700">
+							<span class="font-bold">SuperApp Guru</span>
+						</a>
+					</div>
+					<div class="hidden lg:flex items-center space-x-1">
+						<a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
+						<a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
+						<a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
+						<a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
+						<a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
+						<a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
+						<a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
+					</div>
+				</div>
+
+				<div class="flex items-center">
+					<button id="logout-button" class="hidden lg:block py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button>
+					<div class="lg:hidden ml-4">
+						<button id="mobile-menu-button" class="p-2">
+							<svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="mobile-menu" class="hidden lg:hidden">
+			<a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
+			<a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
+			<a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
+			<a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
+			<a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
+			<a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
+			<a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
+			<hr/>
+			<button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
+		</div>
+	</nav>
 
     <div class="max-w-7xl mx-auto py-8 px-4">
         <div class="flex justify-between items-center mb-8">
@@ -58,6 +70,18 @@
              <button id="tombolTambahSiswa" class="bg-green-500 hover:bg-green-600 text-white font-bold h-10 w-10 rounded-full shadow-md flex items-center justify-center text-2xl" title="Tambah Siswa Baru">+</button>
         </div>
         
+        <div id="form-container-siswa" class="hidden bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle"></h2>
+            <form id="formTambahMurid" class="space-y-4">
+                <input type="hidden" id="ID_Siswa">
+                <div><label for="Nomor_Induk" class="block text-sm font-medium text-gray-700 mb-1">Nomor Induk</label><input type="text" id="Nomor_Induk" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
+                <div><label for="Nama_Lengkap" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label><input type="text" id="Nama_Lengkap" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
+                <div><label for="Kelas" class="block text-sm font-medium text-gray-700 mb-1">Kelas</label><input type="text" id="Kelas" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin</label><div class="flex gap-4"><div class="radio-item"><input type="radio" id="jk_laki" name="Jenis_Kelamin" value="Laki-laki" required><label for="jk_laki">Laki-laki</label></div><div class="radio-item"><input type="radio" id="jk_perempuan" name="Jenis_Kelamin" value="Perempuan"><label for="jk_perempuan">Perempuan</label></div></div></div>
+                <div class="pt-2 flex justify-end gap-4"><button type="button" id="tombolBatalSiswa" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button><button type="submit" id="tombolSimpanSiswa" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan</button></div>
+            </form>
+        </div>
+
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-xl font-semibold text-blue-700 mb-4 border-b pb-2">Daftar Murid Terdaftar</h2>
             <div class="overflow-x-auto"><table class="min-w-full bg-white"><thead class="bg-gray-100"><tr><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">No. Induk</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Nama</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Kelas</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Jenis Kelamin</th><th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Aksi</th></tr></thead><tbody id="tabelSiswaBody"></tbody></table></div>
@@ -75,46 +99,11 @@
         </div>
     </div>
     
-    <div id="modalSiswa" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
-        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-md bg-white">
-            <h2 class="text-xl font-semibold text-blue-700 mb-6 border-b pb-2" id="formSiswaTitle"></h2>
-            <form id="formTambahMurid" class="space-y-4">
-                <input type="hidden" id="ID_Siswa">
-                <div><label for="Nomor_Induk" class="block text-sm font-medium text-gray-700 mb-1">Nomor Induk</label><input type="text" id="Nomor_Induk" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
-                <div><label for="Nama_Lengkap" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label><input type="text" id="Nama_Lengkap" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
-                <div><label for="Kelas" class="block text-sm font-medium text-gray-700 mb-1">Kelas</label><input type="text" id="Kelas" required class="w-full px-4 py-2 border border-gray-300 rounded-md"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin</label><div class="flex gap-4"><div class="radio-item"><input type="radio" id="jk_laki" name="Jenis_Kelamin" value="Laki-laki" required><label for="jk_laki">Laki-laki</label></div><div class="radio-item"><input type="radio" id="jk_perempuan" name="Jenis_Kelamin" value="Perempuan"><label for="jk_perempuan">Perempuan</label></div></div></div>
-                <div class="pt-2 flex justify-end gap-4"><button type="button" id="tombolBatalSiswa" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md">Batal</button><button type="submit" id="tombolSimpanSiswa" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Simpan</button></div>
-            </form>
-        </div>
-    </div>
-    
     <div id="modalBuatAkun" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
-        <div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <h3 class="text-xl font-bold text-blue-700 mb-4">Buat Akun Login Siswa</h3>
-            <form id="formBuatAkunSiswa" class="space-y-4">
-                <input type="hidden" id="akun_siswa_id">
-                <div><label class="block text-sm font-medium text-gray-700">Nama Siswa</label><p id="akun_nama_siswa" class="font-semibold text-lg"></p></div>
-                <div><label for="akun_email" class="block text-sm font-medium text-gray-700">Email Login</label><input type="email" id="akun_email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"></div>
-                <div><label for="akun_password" class="block text-sm font-medium text-gray-700">Password (Default = No. Induk)</label><input type="text" id="akun_password" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"></div>
-                <div class="flex items-center justify-end gap-4 pt-4"><button type="button" id="akun_batal_btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md">Batal</button><button type="submit" id="akun_simpan_btn" class="bg-green-500 text-white py-2 px-4 rounded-md">Buat Akun Sekarang</button></div>
-            </form>
         </div>
-    </div>
     
     <div id="modalResetPassword" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
-		<div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
-			<h3 class="text-xl font-bold text-blue-700 mb-4">Kelola Akun Siswa</h3>
-			<p class="text-lg font-semibold" id="reset_nama_siswa"></p>
-			<div class="my-2"><label class="block text-xs font-medium text-gray-500">Email Login</label><p id="reset_email_siswa" class="text-sm text-gray-800 font-mono bg-gray-100 p-2 rounded">Memuat...</p></div>
-			<p class="text-xs text-gray-500 mb-4">Ganti password jika siswa lupa.</p>
-			<form id="formResetPassword" class="space-y-4">
-				<input type="hidden" id="reset_auth_id">
-				<div><label for="reset_password_baru" class="block text-sm font-medium text-gray-700">Password Baru</label><input type="text" id="reset_password_baru" required class="w-full mt-1 p-2 border border-gray-300 rounded-md"></div>
-				<div class="flex items-center justify-end gap-4 pt-4"><button type="button" id="batalResetBtn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md">Batal</button><button type="submit" id="simpanResetBtn" class="bg-yellow-500 text-white py-2 px-4 rounded-md">Reset Password</button></div>
-			</form>
 		</div>
-	</div>
 
     <script src="scripts/auth.js"></script>
     <script src="scripts/main.js"></script>
