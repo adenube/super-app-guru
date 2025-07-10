@@ -34,6 +34,39 @@ document.addEventListener('DOMContentLoaded', function() {
     muatDataSiswa();
 });
 
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const btn = document.getElementById('simpanResetBtn');
+    const authId = document.getElementById('reset_auth_id').value;
+    const passwordBaru = document.getElementById('reset_password_baru').value;
+
+    if (passwordBaru.length < 6) {
+        tampilkanNotifikasi("Password minimal 6 karakter.", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = 'Memproses...';
+
+    try {
+        const { data, error } = await supa.rpc('update_user_password', {
+            user_id_to_update: authId,
+            new_password: passwordBaru
+        });
+
+        if (error) throw error;
+        
+        tampilkanNotifikasi(data, 'success');
+        document.getElementById('modalResetPassword').classList.add('hidden');
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal reset password: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Reset Password';
+    }
+}
+
 async function muatDataSiswa(forceReload = false) {
     const emptyState = document.getElementById('emptyState');
     emptyState.innerHTML = `<p>Memuat data...</p>`;
