@@ -101,5 +101,54 @@
     <script src="scripts/auth.js"></script>
     <script src="scripts/main.js"></script>
     <script src="scripts/manajemen-siswa.js"></script>
+	
+	<div id="modalBuatAkun" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <h3 class="text-xl font-bold text-blue-700 mb-4">Buat Akun Login Siswa</h3>
+            <form id="formBuatAkunSiswa" class="space-y-4">
+                <input type="hidden" id="akun_siswa_id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Siswa</label>
+                    <p id="akun_nama_siswa" class="font-semibold text-lg"></p>
+                </div>
+                <div>
+                    <label for="akun_email" class="block text-sm font-medium text-gray-700">Email Login</label>
+                    <input type="email" id="akun_email" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="akun_password" class="block text-sm font-medium text-gray-700">Password (Default = No. Induk)</label>
+                    <input type="text" id="akun_password" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center justify-end gap-4 pt-4">
+                    <button type="button" id="akun_batal_btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md">Batal</button>
+                    <button type="submit" id="akun_simpan_btn" class="bg-green-500 text-white py-2 px-4 rounded-md">Buat Akun Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalResetPassword" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full flex items-center justify-center z-50">
+		<div class="relative mx-auto p-6 border w-full max-w-md shadow-lg rounded-md bg-white">
+			<h3 class="text-xl font-bold text-blue-700 mb-4">Kelola Akun Siswa</h3>
+			<p class="text-lg font-semibold" id="reset_nama_siswa"></p>
+            <div class="my-2">
+                <label class="block text-xs font-medium text-gray-500">Email Login</label>
+                <p id="reset_email_siswa" class="text-sm text-gray-800 font-mono bg-gray-100 p-2 rounded">Memuat...</p>
+            </div>
+			<p class="text-xs text-gray-500 mb-4">Ganti password jika siswa lupa.</p>
+			<form id="formResetPassword" class="space-y-4">
+				<input type="hidden" id="reset_auth_id">
+				<div>
+					<label for="reset_password_baru" class="block text-sm font-medium text-gray-700">Password Baru</label>
+					<input type="text" id="reset_password_baru" required class="w-full mt-1 p-2 border border-gray-300 rounded-md">
+				</div>
+				<div class="flex items-center justify-end gap-4 pt-4">
+					<button type="button" id="batalResetBtn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md">Batal</button>
+					<button type="submit" id="simpanResetBtn" class="bg-yellow-500 text-white py-2 px-4 rounded-md">Reset Password</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
 </body>
 </html>
