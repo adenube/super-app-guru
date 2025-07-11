@@ -7,88 +7,107 @@
     <title>Dashboard - SuperApp Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/jspdf-autotable"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f4f8; }
-        .clickable-cell { cursor: pointer; color: #2563eb; font-weight: 600; padding: 4px 8px; border-radius: 6px; transition: background-color 0.2s; }
-        .clickable-cell:hover { color: #1d4ed8; background-color: #eff6ff; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="min-h-screen bg-gray-100">
-    
-    <nav class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between h-16">
-          <div class="flex space-x-4 items-center">
-            <div>
-              <a href="index.html" class="flex items-center py-4 px-2 text-gray-700">
-                <span class="font-bold">SuperApp Guru</span>
-              </a>
-            </div>
-            <div class="hidden md:flex items-center space-x-1">
-              <a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
-              <a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
-              <a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
-              <a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
-              <a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
-              <a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
-              <a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
-            </div>
-          </div>
+<body class="bg-gray-100 font-sans">
 
-          <div class="flex items-center">
-            <div class="hidden md:flex items-center">
-                <button id="logout-button" class="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button>
-            </div>
-            <div class="md:hidden flex items-center">
-              <button id="mobile-menu-button" class="p-2">
-                <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="mobile-menu" class="hidden md:hidden">
-        <a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
-        <a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
-        <a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
-        <a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
-        <a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
-        <a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
-        <a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
-        <hr/>
-        <button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
-      </div>
-    </nav>
+    <nav class="bg-white shadow-md">
+		<div class="max-w-7xl mx-auto px-4">
+			<div class="flex justify-between h-16">
+				<div class="flex space-x-4">
+					<div>
+						<a href="index.html" class="flex items-center h-full px-2 text-gray-700">
+							<span class="font-bold">SuperApp Guru</span>
+						</a>
+					</div>
+					<div class="hidden lg:flex items-center space-x-1">
+						<a href="index.html" class="nav-link py-5 px-3" data-page="index.html">Manajemen Siswa</a>
+						<a href="dashboard.html" class="nav-link py-5 px-3" data-page="dashboard.html">Dashboard</a>
+						<a href="presensi.html" class="nav-link py-5 px-3" data-page="presensi.html">Presensi</a>
+						<a href="rencana-ajar.html" class="nav-link py-5 px-3" data-page="rencana-ajar.html">Rencana Ajar</a>
+						<a href="nilai.html" class="nav-link py-5 px-3" data-page="nilai.html">Nilai</a>
+						<a href="jurnal-mengajar.html" class="nav-link py-5 px-3" data-page="jurnal-mengajar.html">Jurnal</a>
+						<a href="jadwal.html" class="nav-link py-5 px-3" data-page="jadwal.html">Jadwal</a>
+					</div>
+				</div>
+
+				<div class="flex items-center">
+					<button id="logout-button" class="hidden lg:block py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300 text-sm">Logout</button>
+					<div class="lg:hidden ml-4">
+						<button id="mobile-menu-button" class="p-2">
+							<svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="mobile-menu" class="hidden lg:hidden">
+			<a href="index.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Manajemen Siswa</a>
+			<a href="dashboard.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Dashboard</a>
+			<a href="presensi.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Presensi</a>
+			<a href="rencana-ajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Rencana Ajar</a>
+			<a href="nilai.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Nilai</a>
+			<a href="jurnal-mengajar.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jurnal</a>
+			<a href="jadwal.html" class="block py-2 px-4 text-sm hover:bg-gray-200">Jadwal</a>
+			<hr/>
+			<button id="logout-button-mobile" class="w-full text-left block py-2 px-4 text-sm text-red-600 hover:bg-red-50">Logout</button>
+		</div>
+	</nav>
 
     <div class="max-w-6xl mx-auto py-8 px-4">
-        <h1 class="text-3xl font-bold text-blue-800 mb-8">Dashboard Rekapitulasi</h1>
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-semibold text-blue-700">Statistik Total Murid</h2><button id="muatStatistikBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-md text-sm">Muat Statistik</button></div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-blue-50 p-4 rounded-md border border-blue-100 text-center"><div class="text-sm text-gray-500">Laki-laki</div><div class="text-3xl font-bold text-blue-600" id="totalLaki">-</div></div>
-                <div class="bg-pink-50 p-4 rounded-md border border-pink-100 text-center"><div class="text-sm text-gray-500">Perempuan</div><div class="text-3xl font-bold text-pink-600" id="totalPerempuan">-</div></div>
-                <div class="bg-indigo-50 p-4 rounded-md border border-indigo-100 text-center"><div class="text-sm text-gray-500">Total Murid</div><div class="text-3xl font-bold text-indigo-600" id="totalMurid">-</div></div>
+        <h1 class="text-3xl font-bold text-blue-800 mb-6">Dashboard Rekapitulasi</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-blue-100 p-6 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-semibold text-blue-800">Laki-laki</h2>
+                <p id="total-laki" class="text-4xl font-bold mt-2">-</p>
+            </div>
+            <div class="bg-pink-100 p-6 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-semibold text-pink-800">Perempuan</h2>
+                <p id="total-perempuan" class="text-4xl font-bold mt-2">-</p>
+            </div>
+            <div class="bg-indigo-100 p-6 rounded-lg shadow-md text-center">
+                <h2 class="text-xl font-semibold text-indigo-800">Total Murid</h2>
+                <p id="total-murid" class="text-4xl font-bold mt-2">-</p>
             </div>
         </div>
-        <div id="laporan-presensi-container" class="bg-white rounded-lg shadow-lg p-6 mt-8">
-            <h2 class="text-xl font-semibold text-blue-700 mb-4">Laporan Presensi Siswa</h2>
-            <div class="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                <div class="flex-1"><label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Dari Tanggal:</label><input type="date" id="startDate" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
-                <div class="flex-1"><label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal:</label><input type="date" id="endDate" class="w-full px-3 py-2 border border-gray-300 rounded-md"></div>
-                <div class="flex-shrink-0 self-end"><button id="terapkanFilterBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Tampilkan Laporan</button></div>
+
+        <div id="laporan-presensi-container" class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Laporan Presensi Siswa</h2>
+            <div class="flex flex-wrap gap-4 mb-4 items-end">
+                <div>
+                    <label for="tanggal-mulai" class="text-sm font-medium text-gray-700">Dari Tanggal:</label>
+                    <input type="date" id="tanggal-mulai" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="tanggal-akhir" class="text-sm font-medium text-gray-700">Sampai Tanggal:</label>
+                    <input type="date" id="tanggal-akhir" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <button id="tampilkan-laporan" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700">Tampilkan Laporan</button>
             </div>
-            <div id="tabel-laporan-wrapper" class="overflow-x-auto">
-                <p class="text-center text-gray-500 py-8">Pilih rentang tanggal dan klik "Tampilkan Laporan" untuk melihat data.</p>
-            </div>
+            <div id="container-laporan" class="overflow-x-auto">
+                </div>
+            <div id="pesan-laporan" class="text-center py-4 text-gray-500">Pilih rentang tanggal untuk melihat laporan.</div>
         </div>
-    </div>
-    <div id="detailModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white"><div class="mt-3"><div class="flex justify-between items-center mb-4"><h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Detail Siswa</h3><button id="closeModalXBtn" class="text-gray-400 hover:text-gray-600">&times;</button></div><div class="mt-2 px-2 py-3 max-h-60 overflow-y-auto"><ul id="modalList" class="text-left list-disc list-inside space-y-1"></ul></div><div class="items-center px-4 py-3 mt-4"><button id="closeModalBtn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600">Tutup</button></div></div></div>
-    </div>
+
+        <div class="bg-white border-t-4 border-red-500 rounded-lg shadow-lg p-6 mt-8">
+            <h2 class="text-xl font-semibold text-red-700 mb-4">Administrasi Aplikasi</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Gunakan fitur ini untuk mengamankan datamu secara berkala. Proses ini akan mengunduh semua data dari semua tabel ke dalam satu file.
+            </p>
+            <button id="tombolBackup" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                Backup Seluruh Data
+            </button>
+        </div>
+        </div>
+
+    <div id="modal-detail-presensi" class="hidden ...">
+        </div>
+
     <script src="scripts/auth.js"></script>
-	<script src="scripts/main.js"></script> <script src="scripts/dashboard.js"></script>
+    <script src="scripts/dashboard.js"></script>
 </body>
 </html>
