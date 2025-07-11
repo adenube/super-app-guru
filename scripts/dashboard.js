@@ -3,6 +3,7 @@ let rekapDetailCache = {};
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('muatStatistikBtn').addEventListener('click', muatRekapSiswa);
     document.getElementById('terapkanFilterBtn').addEventListener('click', muatLaporanPresensi);
+	document.getElementById('tombolBackup').addEventListener('click', handleBackupDatabase);
     
     const modal = document.getElementById('detailModal');
     if (modal) {
@@ -219,4 +220,66 @@ function tampilkanNotifikasi(message, type) {
     setTimeout(() => {
         notification.remove();
     }, 3000);
+}
+
+// --- FUNGSI BARU UNTUK BACKUP DATABASE ---
+async function handleBackupDatabase() {
+    const btn = document.getElementById('tombolBackup');
+    btn.disabled = true;
+    btn.innerHTML = 'Memproses Backup...';
+    tampilkanNotifikasi('Memulai proses backup, harap tunggu...', 'success');
+
+    try {
+        const tabelUntukBackup = [
+            'Siswa', 
+            'RencanaAjar', 
+            'Presensi', 
+            'Nilai', 
+            'JurnalMengajar',
+            'Jadwal'
+        ];
+
+        const semuaData = await Promise.all(
+            tabelUntukBackup.map(namaTabel => supa.from(namaTabel).select('*'))
+        );
+
+        // Cek jika ada error di salah satu panggilan
+        const errors = semuaData.filter(hasil => hasil.error);
+        if (errors.length > 0) {
+            throw new Error('Gagal mengambil data dari salah satu tabel: ' + errors[0].error.message);
+        }
+
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            Siswa: semuaData[0].data,
+            RencanaAjar: semuaData[1].data,
+            Presensi: semuaData[2].data,
+            Nilai: semuaData[3].data,
+            JurnalMengajar: semuaData[4].data,
+            Jadwal: semuaData[5].data
+        };
+
+        // Buat file JSON dan trigger download
+        const dataStr = JSON.stringify(backupData, null, 2); // null, 2 agar formatnya rapi
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        const tanggalHariIni = new Date().toISOString().slice(0, 10);
+        link.download = `backup_superapp_guru_${tanggalHariIni}.json`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        tampilkanNotifikasi('Backup berhasil diunduh!', 'success');
+
+    } catch (error) {
+        tampilkanNotifikasi('Gagal melakukan backup: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Backup Seluruh Data';
+    }
 }
